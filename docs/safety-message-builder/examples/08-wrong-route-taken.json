@@ -1,0 +1,40 @@
+{
+  "description": "Wrong Route — Taken (headcode wrongly routed)",
+  "input": {
+    "statusType": "new",
+    "category": "wrong_route",
+    "subCategory": "taken",
+    "reporterType": "WH SSM",
+    "reporterQualifier": "",
+    "headcode": "1D48",
+    "serviceTime": "",
+    "serviceOrigin": "",
+    "serviceDestination": "",
+    "unitNumber": "",
+    "location": "Kentish Town Jn",
+    "locationShort": "",
+    "signalId": "WH273",
+    "tcId": "",
+    "routeOffered": "Slow",
+    "routeBooked": "Fast",
+    "speedMph": "",
+    "ossSetMph": "",
+    "incidentTime": "",
+    "driverWelfare": "ok",
+    "driverReliefLocation": "",
+    "ipRole": "",
+    "injuryPhrase": "",
+    "isLateReport": false,
+    "mechanism": "Driver accepted route and proceeded. Route corrected at next opportunity.",
+    "actionChips": [
+      { "chipId": "driver_ok", "param": "" },
+      { "chipId": "lom_aware", "param": "" }
+    ],
+    "delayOutcome": "nil",
+    "delayTime": "",
+    "delayMinutes": "",
+    "isAutumnRelated": false,
+    "headerOverride": false
+  },
+  "expected": "⚠️ *East Midlands Route - Advice of Wrong route - Taken*\nWH SSM advises 1D48 wrongly routed at signal WH273 at Kentish Town Jn towards Slow vice Fast. Driver accepted route and proceeded. Route corrected at next opportunity. Driver OK to continue. LOM aware. Nil delay."
+}

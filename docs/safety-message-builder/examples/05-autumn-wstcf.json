@@ -1,0 +1,41 @@
+{
+  "description": "Autumn-related WSTCF — 🍂 marker in header, TSE reporter",
+  "input": {
+    "statusType": "new",
+    "category": "wstcf_autumn",
+    "subCategory": "centrix",
+    "reporterType": "TSE",
+    "reporterQualifier": "",
+    "headcode": "",
+    "serviceTime": "",
+    "serviceOrigin": "",
+    "serviceDestination": "",
+    "unitNumber": "",
+    "location": "Thorpe on the Hill on the Up Newark",
+    "locationShort": "",
+    "signalId": "",
+    "tcId": "2723",
+    "routeOffered": "",
+    "routeBooked": "",
+    "speedMph": "",
+    "ossSetMph": "",
+    "incidentTime": "",
+    "driverWelfare": "",
+    "driverReliefLocation": "",
+    "ipRole": "",
+    "injuryPhrase": "",
+    "isLateReport": false,
+    "mechanism": "CENTRIX alarm on 2723 T/C SCWO with passage of 2L50 at Thorpe on the Hill on the Up Newark. Abnormal track circuit current detected; rise time exceeded 1905ms threshold.",
+    "actionChips": [
+      { "chipId": "lom_aware", "param": "" },
+      { "chipId": "double_block", "param": "" },
+      { "chipId": "l2_l3_st", "param": "" }
+    ],
+    "delayOutcome": "",
+    "delayTime": "",
+    "delayMinutes": "",
+    "isAutumnRelated": true,
+    "headerOverride": false
+  },
+  "expected": "⚠️🍂 *East Midlands Route - Autumn Related WSTCF*\nTSE advises Autumn related WSTCF on 2723 T/C SCWO at Thorpe on the Hill on the Up Newark. CENTRIX alarm on 2723 T/C SCWO with passage of 2L50 at Thorpe on the Hill on the Up Newark. Abnormal track circuit current detected; rise time exceeded 1905ms threshold. LOM aware. Double block working implemented. L2 S&T advised."
+}

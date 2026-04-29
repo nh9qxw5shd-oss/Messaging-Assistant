@@ -1,0 +1,39 @@
+{
+  "description": "Update message — ℹ️ marker replaces ⚠️, staff accident follow-up",
+  "input": {
+    "statusType": "update",
+    "category": "staff_accident",
+    "subCategory": "strain_sprain",
+    "reporterType": "EMCC SSM",
+    "reporterQualifier": "",
+    "headcode": "",
+    "serviceTime": "",
+    "serviceOrigin": "",
+    "serviceDestination": "",
+    "unitNumber": "",
+    "location": "hospital",
+    "locationShort": "",
+    "signalId": "",
+    "tcId": "",
+    "routeOffered": "",
+    "routeBooked": "",
+    "speedMph": "",
+    "ossSetMph": "",
+    "incidentTime": "",
+    "driverWelfare": "",
+    "driverReliefLocation": "",
+    "ipRole": "Foley Signaller lower back injury",
+    "injuryPhrase": "attended hospital and reports a lower back strain",
+    "isLateReport": false,
+    "mechanism": "As a result the IP has been advised to rest and recover between 5 and 7 days.",
+    "actionChips": [
+      { "chipId": "line_mgr", "param": "" }
+    ],
+    "delayOutcome": "",
+    "delayTime": "",
+    "delayMinutes": "",
+    "isAutumnRelated": false,
+    "headerOverride": false
+  },
+  "expected": "ℹ️ *East Midlands Route - Advice of Staff Accident Update*\nIP — Foley Signaller lower back injury has attended hospital and reports a lower back strain at hospital. As a result the IP has been advised to rest and recover between 5 and 7 days. Line manager advised."
+}

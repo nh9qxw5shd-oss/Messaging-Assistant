@@ -1,0 +1,41 @@
+{
+  "description": "Near Miss with MOP at UWC — identified header, Signaller reporter",
+  "input": {
+    "statusType": "new",
+    "category": "near_miss",
+    "subCategory": "mop",
+    "reporterType": "Signaller",
+    "reporterQualifier": "Scropton",
+    "headcode": "1K59",
+    "serviceTime": "",
+    "serviceOrigin": "",
+    "serviceDestination": "",
+    "unitNumber": "",
+    "location": "Mill Lane UWC",
+    "locationShort": "Mill Lane UWC",
+    "signalId": "",
+    "tcId": "",
+    "routeOffered": "",
+    "routeBooked": "",
+    "speedMph": "",
+    "ossSetMph": "",
+    "incidentTime": "",
+    "driverWelfare": "",
+    "driverReliefLocation": "",
+    "ipRole": "",
+    "injuryPhrase": "",
+    "isLateReport": false,
+    "mechanism": "Male MOP stepped out onto UWC and had to run clear after noticing service. Driver did not clarify if emergency brake application made. Driver confirmed MOP clear of the railway so NWR to be retained.",
+    "actionChips": [
+      { "chipId": "btp_advised", "param": "198" },
+      { "chipId": "ffcctv", "param": "" },
+      { "chipId": "mom_attending", "param": "" }
+    ],
+    "delayOutcome": "",
+    "delayTime": "",
+    "delayMinutes": "",
+    "isAutumnRelated": false,
+    "headerOverride": false
+  },
+  "expected": "⚠️ *East Midlands Route - 1K59 Near Miss Mill Lane UWC*\nSignaller Scropton advises near miss reported by driver 1K59 when approaching Mill Lane UWC. Male MOP stepped out onto UWC and had to run clear after noticing service. Driver did not clarify if emergency brake application made. Driver confirmed MOP clear of the railway so NWR to be retained. BTP advised Ref: 198. FFCCTV requested. MOM attending."
+}

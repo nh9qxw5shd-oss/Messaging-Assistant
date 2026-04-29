@@ -1,0 +1,40 @@
+{
+  "description": "Wrong Route — Not Taken (plain header, EMCC SSM reporter)",
+  "input": {
+    "statusType": "new",
+    "category": "wrong_route",
+    "subCategory": "not_taken",
+    "reporterType": "EMCC SSM",
+    "reporterQualifier": "",
+    "headcode": "1Y13",
+    "serviceTime": "10:09",
+    "serviceOrigin": "LEEDS",
+    "serviceDestination": "NOTTINGHM",
+    "unitNumber": "",
+    "location": "",
+    "locationShort": "",
+    "signalId": "DC4878",
+    "tcId": "",
+    "routeOffered": "Derby",
+    "routeBooked": "Alfreton",
+    "speedMph": "",
+    "ossSetMph": "",
+    "incidentTime": "",
+    "driverWelfare": "ok",
+    "driverReliefLocation": "",
+    "ipRole": "",
+    "injuryPhrase": "",
+    "isLateReport": false,
+    "mechanism": "Driver queried the route and signal taken back.",
+    "actionChips": [
+      { "chipId": "driver_ok", "param": "" },
+      { "chipId": "lom_aware", "param": "" }
+    ],
+    "delayOutcome": "",
+    "delayTime": "",
+    "delayMinutes": "",
+    "isAutumnRelated": false,
+    "headerOverride": false
+  },
+  "expected": "⚠️ *East Midlands Route - Advice of Wrong route - Not Taken*\nEMCC SSM advises wrong route offered to 1Y13 (10:09 LEEDS to NOTTINGHM) at signal DC4878 towards Derby vice Alfreton. Driver queried the route and signal taken back. Driver OK to continue. LOM aware."
+}

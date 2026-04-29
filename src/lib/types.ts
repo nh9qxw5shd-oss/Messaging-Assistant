@@ -95,37 +95,7 @@ export interface TacticalState {
   seasonal: string;
 }
 
-export type SafetyTypeId =
-  | "near_miss"
-  | "wrong_route"
-  | "lb_poss"
-  | "staff_acc"
-  | "sig_irreg"
-  | "station_ops"
-  | "other";
-
-export interface SafetyActions {
-  ebr: boolean;
-  mom: boolean;
-  btp: boolean;
-  screen: boolean;
-  care: boolean;
-  ffcctv: boolean;
-}
-
-export interface SafetyState {
-  type: SafetyTypeId;
-  subtype: string;
-  location: string;
-  time: string;
-  asset: string;
-  people: string;
-  what: string;
-  actions: SafetyActions;
-  status: string;
-  owner: string;
-  notes: string;
-}
+export type { SafetyIncidentState } from "./safety/types";
 
 // ─── Session state (localStorage) ────────────────────────────────────────────
 
@@ -135,7 +105,7 @@ export interface SessionState {
   str_am: StrategicAMState;
   str_pm: StrategicPMState;
   tac: TacticalState;
-  safety_msg: SafetyState;
+  safety_msg: import("./safety/types").SafetyIncidentState;
 }
 
 export interface BackupEntry {

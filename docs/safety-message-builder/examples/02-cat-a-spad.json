@@ -1,0 +1,40 @@
+{
+  "description": "Cat A SPAD — identified header, driver as reporter",
+  "input": {
+    "statusType": "new",
+    "category": "spad",
+    "subCategory": "cat_a",
+    "reporterType": "Driver",
+    "reporterQualifier": "",
+    "headcode": "1D48",
+    "serviceTime": "",
+    "serviceOrigin": "",
+    "serviceDestination": "",
+    "unitNumber": "",
+    "location": "Down fast, St Pancras Churchyard",
+    "locationShort": "St Pancras Churchyard",
+    "signalId": "WH21",
+    "tcId": "",
+    "routeOffered": "",
+    "routeBooked": "",
+    "speedMph": "",
+    "ossSetMph": "",
+    "incidentTime": "",
+    "driverWelfare": "",
+    "driverReliefLocation": "",
+    "ipRole": "",
+    "injuryPhrase": "",
+    "isLateReport": false,
+    "mechanism": "Signal was about to be cleared but signaller was busy with LB on Tottenham lines. Driver left St Pancras on a double yellow but became preoccupied with running brake test and missed the single yellow in rear of WH21.",
+    "actionChips": [
+      { "chipId": "no_allegations", "param": "" },
+      { "chipId": "driver_relieved", "param": "West Hampstead" }
+    ],
+    "delayOutcome": "",
+    "delayTime": "",
+    "delayMinutes": "",
+    "isAutumnRelated": false,
+    "headerOverride": false
+  },
+  "expected": "⚠️ *East Midlands Route - Cat A SPaD 1D48 St Pancras Churchyard*\nDriver reports passing signal WH21 (Down fast, St Pancras Churchyard). Signal was about to be cleared but signaller was busy with LB on Tottenham lines. Driver left St Pancras on a double yellow but became preoccupied with running brake test and missed the single yellow in rear of WH21. No allegation against signalling. Driver relieved at West Hampstead."
+}
