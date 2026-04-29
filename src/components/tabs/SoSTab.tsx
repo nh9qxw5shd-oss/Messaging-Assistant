@@ -10,7 +10,7 @@ import clsx from "clsx";
 
 const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
 const labelCls = "block font-mono uppercase tracking-widest text-muted mb-1.5";
-const h4Cls    = "font-sans font-semibold text-ink/80 mt-4 mb-2";
+const h4Cls    = "font-sans font-semibold text-ink/80 mb-2";
 const sectionCls = "flex flex-col gap-3";
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -30,19 +30,19 @@ export default function SoSTab() {
     <div className="flex flex-col gap-5">
       {/* Greeting */}
       <div className={sectionCls}>
-        <label className={labelCls}>Greeting / Intro</label>
+        <SectionHeading>Greeting / Intro</SectionHeading>
         <AutoTextarea value={sos.intro} onChange={(v) => setSoS({ intro: v })} />
       </div>
 
       {/* Operational Status */}
       <div className={sectionCls}>
-        <label className={labelCls}>Operational Status</label>
+        <SectionHeading>Operational Status</SectionHeading>
         <StatusSelect value={sos.status} options={LONG_OPS} onChange={(v) => setSoS({ status: v })} />
       </div>
 
       {/* Safety */}
       <div className={sectionCls}>
-        <label className={labelCls}>Overnight Safety Incidents</label>
+        <SectionHeading>Overnight Safety Incidents</SectionHeading>
         <AutoTextarea value={sos.safety} onChange={(v) => setSoS({ safety: v })} placeholder="Nil" />
       </div>
 
@@ -124,7 +124,7 @@ export default function SoSTab() {
 
       {/* Incidents */}
       <div className={sectionCls}>
-        <label className={labelCls}>Incidents ongoing/concluded since last update</label>
+        <SectionHeading>Incidents ongoing/concluded since last update</SectionHeading>
         <AutoTextarea value={sos.incidents} onChange={(v) => setSoS({ incidents: v })} />
       </div>
 
@@ -156,30 +156,30 @@ export default function SoSTab() {
 
       {/* Weather */}
       <div className={sectionCls}>
-        <label className={labelCls}>Weather Forecast Summary</label>
+        <SectionHeading>Weather Forecast Summary</SectionHeading>
         <AutoTextarea value={sos.weather} onChange={(v) => setSoS({ weather: v })} />
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Max Temperatures</label>
+        <SectionHeading>Max Temperatures</SectionHeading>
         <input type="text" value={sos.maxtemps} onChange={(e) => setSoS({ maxtemps: e.target.value })} placeholder="East Midlands: Max 18.0°c / Min 8.0°c; London North: Max 18.5°c / Min 12.0°c" className={inputCls} />
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Forecast — 24 hours</label>
+        <SectionHeading>Forecast — 24 hours</SectionHeading>
         <AutoTextarea value={sos.forecast} onChange={(v) => setSoS({ forecast: v })} />
       </div>
 
       {/* Engineering */}
       <div className={sectionCls}>
-        <label className={labelCls}>Engineering and Critical Works</label>
+        <SectionHeading>Engineering and Critical Works</SectionHeading>
         <AutoTextarea value={sos.eng} onChange={(v) => setSoS({ eng: v })} />
       </div>
 
       {/* Seasonal slot */}
       <div className={sectionCls}>
         <div className="flex items-center justify-between mb-1">
-          <label className={labelCls}>Optional Seasonal Slot</label>
+          <h4 className="font-sans font-semibold text-ink/80">Optional Seasonal Slot</h4>
           {sosTemplates.length > 0 && (
             <button
               onClick={() => setShowTemplates(!showTemplates)}

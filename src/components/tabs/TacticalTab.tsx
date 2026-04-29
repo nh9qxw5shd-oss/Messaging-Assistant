@@ -23,7 +23,7 @@ export default function TacticalTab() {
     <div className="flex flex-col gap-5">
       {/* Greeting */}
       <div className={sectionCls}>
-        <label className={labelCls}>Greeting / Intro</label>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Greeting / Intro</h4>
         <AutoTextarea value={tac.intro} onChange={(v) => setTac({ intro: v })} />
       </div>
 
@@ -44,13 +44,13 @@ export default function TacticalTab() {
 
       {/* Operational Status */}
       <div className={sectionCls}>
-        <label className={labelCls}>Operational Status</label>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Operational Status</h4>
         <StatusSelect value={tac.status} options={LONG_OPS} onChange={(v) => setTac({ status: v })} />
       </div>
 
       {/* Safety */}
       <div className={sectionCls}>
-        <label className={labelCls}>Safety Incidents/Accidents</label>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Safety Incidents/Accidents</h4>
         <AutoTextarea value={tac.safety} onChange={(v) => setTac({ safety: v })} placeholder="Nil" />
       </div>
 
@@ -66,7 +66,7 @@ export default function TacticalTab() {
 
       {/* Incidents */}
       <div className={sectionCls}>
-        <label className={labelCls}>Incidents ongoing/concluded since last update</label>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Incidents ongoing/concluded since last update</h4>
         <AutoTextarea value={tac.incidents} onChange={(v) => setTac({ incidents: v })} />
       </div>
 
@@ -109,7 +109,7 @@ export default function TacticalTab() {
       {/* Seasonal slot */}
       <div className={sectionCls}>
         <div className="flex items-center justify-between mb-1">
-          <label className={labelCls}>Seasonal Slot</label>
+          <h4 className="font-sans font-semibold text-ink/80">Seasonal Slot</h4>
           {tacTemplates.length > 0 && (
             <button
               onClick={() => setShowTemplates(!showTemplates)}

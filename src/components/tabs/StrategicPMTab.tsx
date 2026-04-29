@@ -6,6 +6,7 @@ import PerfTable from "@/components/shared/PerfTable";
 import { LONG_OPS } from "@/lib/constants";
 
 const labelCls = "block font-mono uppercase tracking-widest text-muted mb-1.5";
+const h4Cls = "font-sans font-semibold text-ink/80 mb-2";
 const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
 const sectionCls = "flex flex-col gap-3";
 
@@ -15,7 +16,7 @@ export default function StrategicPMTab() {
   return (
     <div className="flex flex-col gap-5">
       <div className={sectionCls}>
-        <label className={labelCls}>Executive Summary</label>
+        <h4 className={h4Cls}>Executive Summary</h4>
         <AutoTextarea
           value={str_pm.exec}
           onChange={(v) => setStrPM({ exec: v })}
@@ -25,12 +26,12 @@ export default function StrategicPMTab() {
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Operational Status</label>
+        <h4 className={h4Cls}>Operational Status</h4>
         <StatusSelect value={str_pm.status} options={LONG_OPS} onChange={(v) => setStrPM({ status: v })} />
       </div>
 
       <div>
-        <h4 className="font-sans font-semibold text-ink/80 mt-2 mb-2">Performance Snapshot</h4>
+        <h4 className={h4Cls}>Performance Snapshot</h4>
         <PerfTable
           metrics={str_pm.perf}
           locked
@@ -39,7 +40,7 @@ export default function StrategicPMTab() {
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Performance Trends</label>
+        <h4 className={h4Cls}>Performance Trends</h4>
         <AutoTextarea
           value={str_pm.trends}
           onChange={(v) => setStrPM({ trends: v })}
@@ -49,7 +50,7 @@ export default function StrategicPMTab() {
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Key Service Interventions Taken & Contingency Plans</label>
+        <h4 className={h4Cls}>Key Service Interventions Taken & Contingency Plans</h4>
         <AutoTextarea
           value={str_pm.interv}
           onChange={(v) => setStrPM({ interv: v })}
@@ -59,7 +60,7 @@ export default function StrategicPMTab() {
       </div>
 
       <div>
-        <h4 className="font-sans font-semibold text-ink/80 mt-2 mb-2">Forward Risks — Tomorrow's Start of Service</h4>
+        <h4 className={h4Cls}>Forward Risks — Tomorrow's Start of Service</h4>
         <div className="grid grid-cols-2 gap-3">
           {([
             ["risk_infra",    "Infrastructure",  "e.g. No outstanding defects"],
@@ -82,7 +83,7 @@ export default function StrategicPMTab() {
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Outlook</label>
+        <h4 className={h4Cls}>Outlook</h4>
         <AutoTextarea
           value={str_pm.outlook}
           onChange={(v) => setStrPM({ outlook: v })}
