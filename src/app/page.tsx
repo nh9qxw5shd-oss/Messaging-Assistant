@@ -23,12 +23,20 @@ export default function Page() {
     setSupabaseReady,
     backupNow,
     toast,
+    theme,
   } = useStore();
 
   // ─── Hydrate session state from localStorage ─────────────────────────────
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  // ─── Apply theme class to <html> ─────────────────────────────────────────
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("light", theme === "light");
+    root.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   // ─── Load Supabase config ─────────────────────────────────────────────────
   useEffect(() => {

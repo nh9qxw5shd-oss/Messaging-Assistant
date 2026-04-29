@@ -87,6 +87,7 @@ export interface AppStore {
   builtMessage: string;
   toast:        string | null;
   supabaseReady: boolean;
+  theme:        "dark" | "light";
 
   // ─── Meta ─────────────────────────────────────────────────────────────────
   setMeta: (partial: Partial<MetaState>) => void;
@@ -133,6 +134,7 @@ export interface AppStore {
   setBuiltMessage: (msg: string) => void;
   showToast:       (msg: string) => void;
   clearToast:      () => void;
+  toggleTheme:     () => void;
 
   // ─── Persistence ─────────────────────────────────────────────────────────
   hydrate:      () => void;
@@ -190,6 +192,7 @@ export const useStore = create<AppStore>((set, get) => {
     builtMessage:  "",
     toast:         null,
     supabaseReady: false,
+    theme:         (typeof window !== "undefined" && localStorage.getItem("theme") === "light") ? "light" : "dark",
 
     // ─── Meta ────────────────────────────────────────────────────────────────
     setMeta: (partial) => {
@@ -371,6 +374,11 @@ export const useStore = create<AppStore>((set, get) => {
       setTimeout(() => set({ toast: null }), 1200);
     },
     clearToast: () => set({ toast: null }),
+    toggleTheme: () => {
+      const next = get().theme === "dark" ? "light" : "dark";
+      if (typeof window !== "undefined") localStorage.setItem("theme", next);
+      set({ theme: next });
+    },
 
     // ─── Persistence ─────────────────────────────────────────────────────────
     hydrate: () => {
