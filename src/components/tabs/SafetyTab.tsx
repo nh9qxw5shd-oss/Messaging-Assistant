@@ -5,9 +5,9 @@ import { SAFETY_TYPES, SAFETY_SUBTYPES, SAFETY_STATUS } from "@/lib/constants";
 import type { SafetyTypeId } from "@/lib/types";
 import clsx from "clsx";
 
-const labelCls = "block font-mono text-[10px] uppercase tracking-widest text-muted mb-1.5";
-const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-sm text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
-const selectCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-sm text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors cursor-pointer";
+const labelCls = "block font-mono uppercase tracking-widest text-muted mb-1.5";
+const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
+const selectCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors cursor-pointer";
 const sectionCls = "flex flex-col gap-3";
 
 export default function SafetyTab() {
@@ -93,7 +93,7 @@ export default function SafetyTab() {
           ] as const).map(([key, label]) => (
             <label
               key={key}
-              className="flex items-center gap-2 text-sm text-ink cursor-pointer group select-none"
+              className="flex items-center gap-2 text-ink cursor-pointer group select-none"
             >
               <input
                 type="checkbox"
@@ -139,11 +139,11 @@ export default function SafetyTab() {
           onClick={() => {
             if (window.confirm("Clear the safety form?")) clearSafety();
           }}
-          className="px-4 py-2 rounded text-sm font-semibold bg-warn/10 text-warn border border-warn/30 hover:bg-warn/20 transition-colors"
+          className="px-4 py-2 rounded font-semibold bg-warn/10 text-warn border border-warn/30 hover:bg-warn/20 transition-colors"
         >
           Clear safety form
         </button>
-        <p className="text-[11px] text-muted mt-2">Build generates the standardised A–D safety message — same output format every time.</p>
+        <p className="text-muted mt-2">Build generates the standardised A–D safety message — same output format every time.</p>
       </div>
     </div>
   );

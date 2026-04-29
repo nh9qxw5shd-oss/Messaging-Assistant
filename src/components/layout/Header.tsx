@@ -52,7 +52,7 @@ export default function Header() {
           onChange={(e) => setMeta({ route: e.target.value })}
           className="
             w-52 rounded bg-bg border border-grid px-2.5 py-1.5
-            text-sm text-ink font-sans
+            text-ink font-sans
             focus:outline-none focus:border-accent/60
             transition-colors placeholder:text-muted/50
           "
@@ -64,7 +64,7 @@ export default function Header() {
           onChange={(e) => setMeta({ stamp: e.target.value })}
           className="
             rounded bg-bg border border-grid px-2.5 py-1.5
-            text-sm text-muted font-mono
+            text-muted font-mono
             focus:outline-none focus:border-accent/60
             transition-colors
           "

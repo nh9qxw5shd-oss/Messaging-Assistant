@@ -5,8 +5,8 @@ import StatusSelect from "@/components/shared/StatusSelect";
 import PerfTable from "@/components/shared/PerfTable";
 import { LONG_OPS } from "@/lib/constants";
 
-const labelCls = "block font-mono text-[10px] uppercase tracking-widest text-muted mb-1.5";
-const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-sm text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
+const labelCls = "block font-mono uppercase tracking-widest text-muted mb-1.5";
+const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
 const sectionCls = "flex flex-col gap-3";
 
 export default function StrategicPMTab() {
@@ -30,7 +30,7 @@ export default function StrategicPMTab() {
       </div>
 
       <div>
-        <h4 className="font-sans font-semibold text-sm text-ink/80 mt-2 mb-2">Performance Snapshot</h4>
+        <h4 className="font-sans font-semibold text-ink/80 mt-2 mb-2">Performance Snapshot</h4>
         <PerfTable
           metrics={str_pm.perf}
           locked
@@ -59,7 +59,7 @@ export default function StrategicPMTab() {
       </div>
 
       <div>
-        <h4 className="font-sans font-semibold text-sm text-ink/80 mt-2 mb-2">Forward Risks — Tomorrow's Start of Service</h4>
+        <h4 className="font-sans font-semibold text-ink/80 mt-2 mb-2">Forward Risks — Tomorrow's Start of Service</h4>
         <div className="grid grid-cols-2 gap-3">
           {([
             ["risk_infra",    "Infrastructure",  "e.g. No outstanding defects"],

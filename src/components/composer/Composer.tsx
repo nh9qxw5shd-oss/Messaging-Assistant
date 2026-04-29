@@ -67,10 +67,10 @@ export default function Composer() {
     <div className="flex flex-col gap-4">
       {/* Section label */}
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted">
+        <span className="font-mono uppercase tracking-widest text-muted">
           Composer
         </span>
-        <span className="text-[10px] text-muted/50 font-mono">· Ctrl+Enter to build</span>
+        <span className="text-muted/50 font-mono">· Ctrl+Enter to build</span>
       </div>
 
       {/* Banner preview */}
@@ -83,7 +83,7 @@ export default function Composer() {
         readOnly
         placeholder={isConfigTab ? "Select a message tab to build." : "Built message appears here…"}
         minRows={10}
-        className="font-mono text-xs leading-relaxed min-h-[200px]"
+        className="font-mono leading-relaxed min-h-[200px]"
       />
 
       {/* Actions */}
@@ -92,7 +92,7 @@ export default function Composer() {
           <button
             onClick={build}
             className={clsx(
-              "flex-1 px-4 py-2.5 rounded text-sm font-semibold font-sans",
+              "flex-1 px-4 py-2.5 rounded font-semibold font-sans",
               "bg-accent text-white border border-accent/80",
               "hover:bg-accent-dim transition-colors duration-150",
               "shadow-orange-glow-sm"
@@ -104,7 +104,7 @@ export default function Composer() {
             onClick={copy}
             disabled={!hasMessage}
             className={clsx(
-              "px-4 py-2.5 rounded text-sm font-semibold font-sans",
+              "px-4 py-2.5 rounded font-semibold font-sans",
               "bg-panel2 text-ink border border-grid",
               "hover:border-accent/50 transition-colors duration-150",
               "disabled:opacity-40 disabled:cursor-not-allowed"
@@ -119,7 +119,7 @@ export default function Composer() {
       <div className="border-t border-grid/60" />
 
       {/* Emoji tray */}
-      <span className="font-mono text-[10px] uppercase tracking-widest text-muted">
+      <span className="font-mono uppercase tracking-widest text-muted">
         Emoji tray · click to copy
       </span>
       <EmojiTray />

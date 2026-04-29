@@ -12,7 +12,7 @@ import {
 import type { TargetPeriod } from "@/lib/types";
 import clsx from "clsx";
 
-const btnCls = "px-3 py-2 rounded text-sm font-semibold border transition-colors";
+const btnCls = "px-3 py-2 rounded font-semibold border transition-colors";
 
 export default function TargetsTab() {
   const {
@@ -136,19 +136,19 @@ export default function TargetsTab() {
     <div className="flex flex-col gap-6">
       <div>
         <h3 className="font-display font-semibold text-base text-ink mb-1">Targets & Thresholds</h3>
-        <p className="text-xs text-muted">Edit target/amber/direction here — changes propagate to all performance tables. Value and notes are per-section.</p>
+        <p className="text-muted">Edit target/amber/direction here — changes propagate to all performance tables. Value and notes are per-section.</p>
       </div>
 
       {/* Supabase target periods */}
       {supabaseReady && (
         <div className="rounded border border-grid bg-panel2 p-4 flex flex-col gap-3">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted">Target Periods (Supabase)</span>
+          <span className="font-mono uppercase tracking-widest text-muted">Target Periods (Supabase)</span>
 
           <div className="flex gap-2 flex-wrap">
             <select
               value={activeTargetPeriodId ?? ""}
               onChange={(e) => e.target.value && handlePeriodSelect(e.target.value)}
-              className="flex-1 min-w-0 rounded bg-panel border border-grid px-3 py-2 text-sm text-ink focus:outline-none focus:border-accent"
+              className="flex-1 min-w-0 rounded bg-panel border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent"
             >
               <option value="">— Select period —</option>
               {targetPeriods.map((p: TargetPeriod) => (
@@ -177,7 +177,7 @@ export default function TargetsTab() {
               value={newPeriodName}
               onChange={(e) => setNewPeriodName(e.target.value)}
               placeholder="e.g. Period 12 2025/26"
-              className="flex-1 rounded bg-panel border border-grid px-3 py-2 text-sm text-ink focus:outline-none focus:border-accent placeholder:text-muted/60"
+              className="flex-1 rounded bg-panel border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent placeholder:text-muted/60"
             />
             <button onClick={handleCreatePeriod} disabled={!newPeriodName.trim() || loading} className={clsx(btnCls, "bg-panel border-grid text-ink hover:border-accent/50 disabled:opacity-40")}>
               + Create period
@@ -209,7 +209,7 @@ export default function TargetsTab() {
 
       {/* Config + Backup */}
       <div className="border-t border-grid/60 pt-4 flex flex-col gap-3">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted">Config & Backups</span>
+        <span className="font-mono uppercase tracking-widest text-muted">Config & Backups</span>
         <div className="flex gap-2 flex-wrap">
           <button onClick={exportConfig} className={clsx(btnCls, "bg-panel border-grid text-ink hover:border-accent/50")}>
             Export config

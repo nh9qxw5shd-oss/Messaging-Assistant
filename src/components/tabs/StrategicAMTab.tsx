@@ -5,7 +5,7 @@ import StatusSelect from "@/components/shared/StatusSelect";
 import PerfTable from "@/components/shared/PerfTable";
 import { LONG_OPS } from "@/lib/constants";
 
-const labelCls = "block font-mono text-[10px] uppercase tracking-widest text-muted mb-1.5";
+const labelCls = "block font-mono uppercase tracking-widest text-muted mb-1.5";
 const sectionCls = "flex flex-col gap-3";
 
 export default function StrategicAMTab() {
@@ -29,7 +29,7 @@ export default function StrategicAMTab() {
       </div>
 
       <div>
-        <h4 className="font-sans font-semibold text-sm text-ink/80 mt-2 mb-2">Performance Snapshot</h4>
+        <h4 className="font-sans font-semibold text-ink/80 mt-2 mb-2">Performance Snapshot</h4>
         <PerfTable
           metrics={str_am.perf}
           locked
