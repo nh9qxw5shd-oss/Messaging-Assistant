@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useStore } from "@/lib/store";
 import PerfTable from "@/components/shared/PerfTable";
 import {
@@ -16,17 +16,14 @@ const btnCls = "px-3 py-2 rounded font-semibold border transition-colors";
 
 export default function TargetsTab() {
   const {
-    targets, updateTarget, addTarget, removeTarget, resetTargets,
+    targets, updateTarget, addTarget, removeTarget,
     targetPeriods, activeTargetPeriodId,
     setTargets, setTargetPeriods, setActiveTargetPeriodId,
-    showToast, exportConfig, importConfig, backupNow, getBackups, restoreBackup,
-    supabaseReady,
+    showToast, supabaseReady,
   } = useStore();
 
   const [loading, setLoading] = useState(false);
   const [newPeriodName, setNewPeriodName] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cfgFileRef = useRef<HTMLInputElement>(null);
 
   // ─── Supabase: load periods ──────────────────────────────────────────────
   async function loadPeriods() {
@@ -92,44 +89,6 @@ export default function TargetsTab() {
     } finally {
       setLoading(false);
     }
-  }
-
-  // ─── Backups ────────────────────────────────────────────────────────────
-  function handleBackupNow() {
-    backupNow("manual");
-    showToast("Backup saved");
-  }
-
-  function handleRestore() {
-    const list = getBackups().slice().reverse();
-    if (!list.length) { showToast("No backups found"); return; }
-    const fmt = (ts: number) => new Date(ts).toLocaleString("en-GB");
-    const menu = list.map((b, i) => `${i + 1}. ${fmt(b.ts)} (${b.reason})`).join("\n");
-    const input = window.prompt(`Choose a backup (newest first):\n\n${menu}\n\nEnter number:`, "1");
-    const n = Number(input);
-    if (!n || n < 1 || n > list.length) return;
-    if (window.confirm(`Restore backup from ${fmt(list[n - 1].ts)}?`)) {
-      // Index in original (oldest-first) array
-      restoreBackup(getBackups().length - n);
-      showToast("Backup restored");
-    }
-  }
-
-  // ─── Config import ───────────────────────────────────────────────────────
-  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        importConfig(reader.result as string);
-        showToast("Config imported");
-      } catch {
-        showToast("Invalid config JSON");
-      }
-    };
-    reader.readAsText(f);
-    e.target.value = "";
   }
 
   return (
@@ -199,32 +158,6 @@ export default function TargetsTab() {
         <button onClick={addTarget} className={clsx(btnCls, "bg-panel border-grid text-ink hover:border-accent/50")}>
           + Add metric
         </button>
-        <button
-          onClick={() => { if (window.confirm("Reset targets to defaults?")) resetTargets(); }}
-          className={clsx(btnCls, "bg-bad/10 text-bad border-bad/30 hover:bg-bad/20")}
-        >
-          Reset defaults
-        </button>
-      </div>
-
-      {/* Config + Backup */}
-      <div className="border-t border-grid/60 pt-4 flex flex-col gap-3">
-        <h4 className="font-sans font-semibold text-ink/80 mb-0">Config & Backups</h4>
-        <div className="flex gap-2 flex-wrap">
-          <button onClick={exportConfig} className={clsx(btnCls, "bg-panel border-grid text-ink hover:border-accent/50")}>
-            Export config
-          </button>
-          <button onClick={() => cfgFileRef.current?.click()} className={clsx(btnCls, "bg-panel border-grid text-ink hover:border-accent/50")}>
-            Import config
-          </button>
-          <input ref={cfgFileRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
-          <button onClick={handleBackupNow} className={clsx(btnCls, "bg-panel border-grid text-ink hover:border-accent/50")}>
-            Backup now
-          </button>
-          <button onClick={handleRestore} className={clsx(btnCls, "bg-panel border-grid text-ink hover:border-accent/50")}>
-            Restore backup…
-          </button>
-        </div>
       </div>
     </div>
   );
