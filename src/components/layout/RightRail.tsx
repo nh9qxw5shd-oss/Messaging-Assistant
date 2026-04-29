@@ -33,7 +33,7 @@ export default function RightRail() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={clsx(
-                "relative px-3 py-2 rounded-t text-xs font-mono uppercase tracking-wider transition-all duration-150",
+                "relative px-3 py-2 rounded-t font-mono uppercase tracking-wider transition-all duration-150",
                 "focus:outline-none",
                 active
                   ? "text-accent bg-panel border-t border-x border-grid -mb-px z-10"

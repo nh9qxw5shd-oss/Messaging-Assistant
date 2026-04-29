@@ -4,27 +4,67 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
+/* ─── Design tokens ─────────────────────────────────────────────────────────── */
+
 :root {
   --font-body:    'Inter Tight', ui-sans-serif, system-ui;
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
   --font-display: 'Fraunces', Georgia, serif;
+
+  /* Dark theme (default) */
+  --color-bg:        #070B16;
+  --color-panel:     #0D1527;
+  --color-panel2:    #111E33;
+  --color-ink:       #F2F6FC;
+  --color-muted:     #90A8C3;
+  --color-grid:      #1E2D45;
+  --grid-line-color: rgba(30, 45, 69, 0.40);
+  --scrollbar-thumb: #1E2D45;
+  --scrollbar-hover: #2a3f5e;
+  --calendar-filter: invert(0.7);
 }
+
+/* Light theme overrides */
+.light {
+  --color-bg:        #F0F4FA;
+  --color-panel:     #FFFFFF;
+  --color-panel2:    #E8EEF7;
+  --color-ink:       #0F172A;
+  --color-muted:     #4A6080;
+  --color-grid:      #C8D5E8;
+  --grid-line-color: rgba(148, 163, 184, 0.30);
+  --scrollbar-thumb: #C8D5E8;
+  --scrollbar-hover: #A0B4CC;
+  --calendar-filter: invert(0);
+}
+
+/* ─── Reset ─────────────────────────────────────────────────────────────────── */
 
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
+html {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
 html, body {
   height: 100%;
   margin: 0;
-  background-color: #070B16;
-  color: #E8EDF5;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
   font-family: var(--font-body);
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Blue grid backdrop */
+/* ─── Grid backdrop ─────────────────────────────────────────────────────────── */
+
 body::before {
   content: '';
   position: fixed;
@@ -32,8 +72,8 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background-image:
-    linear-gradient(rgba(30, 45, 69, 0.35) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(30, 45, 69, 0.35) 1px, transparent 1px);
+    linear-gradient(var(--grid-line-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line-color) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
@@ -43,7 +83,8 @@ body::before {
   z-index: 1;
 }
 
-/* Scrollbar styling */
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -52,19 +93,19 @@ body::before {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1E2D45;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a3f5e;
+  background: var(--scrollbar-hover);
 }
 
-/* datetime-local dark mode */
+/* ─── Form inputs ───────────────────────────────────────────────────────────── */
+
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.7);
+  filter: var(--calendar-filter);
 }
 
-/* Number input - hide spinners */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -74,17 +115,14 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* File input */
 input[type="file"] {
   display: none;
 }
 
-/* Checkbox accent */
 input[type="checkbox"] {
   accent-color: #E05206;
 }
 
-/* Selection */
 ::selection {
   background: rgba(224, 82, 6, 0.25);
 }

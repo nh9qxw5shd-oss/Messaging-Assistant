@@ -43,11 +43,11 @@ export default function AutoTextarea({
       rows={minRows}
       className={clsx(
         "w-full resize-none rounded bg-panel2 border border-grid px-3 py-2",
-        "text-ink text-sm font-sans leading-relaxed",
+        "text-ink font-sans leading-relaxed",
         "placeholder:text-muted",
         "focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30",
         "transition-colors duration-150",
-        readOnly && "font-mono text-xs cursor-default",
+        readOnly && "font-mono cursor-default",
         className
       )}
     />

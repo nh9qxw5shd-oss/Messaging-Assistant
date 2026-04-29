@@ -1,12 +1,27 @@
 import type { TargetMetric } from "./types";
+import { SOS_ONLY_METRIC } from "./constants";
 
 // ─── RAG emoji ────────────────────────────────────────────────────────────────
+
+// Hard-coded rule for Current Period Variance:
+//   >= 0  → green   (above zero)
+//   >= -5 → amber   (below zero but within -5)
+//   <  -5 → red
+function ragVariance(num: number): string {
+  if (num >= 0) return "🟢";
+  if (num >= -5) return "🟠";
+  return "🔴";
+}
 
 export function rag(metric: TargetMetric): string {
   const v = metric.value;
   if (v === "" || v === null || v === undefined) return "⚪";
   const num = Number(v);
   if (isNaN(num)) return "⚪";
+
+  if (metric.name.trim().toLowerCase() === SOS_ONLY_METRIC) {
+    return ragVariance(num);
+  }
 
   const t = Number(metric.target);
   const a = Number(metric.amber);
@@ -70,8 +85,10 @@ export function linesFromPerf(arr: TargetMetric[]): string {
   return arr
     .map((m) => {
       const e = rag(m);
-      const parts = [`${e} ${m.name}: ${m.value}`];
-      if (m.target !== "") parts.push(`(Tgt ${m.target})`);
+      const isVariance = m.name.trim().toLowerCase() === SOS_ONLY_METRIC;
+      const displayValue = m.value !== "" && isVariance ? `${m.value}%` : m.value;
+      const parts = [`${e} ${m.name}: ${displayValue}`];
+      if (!isVariance && m.target !== "") parts.push(`(Tgt ${m.target})`);
       if (m.notes) parts.push(`– ${m.notes}`);
       return parts.join(" ");
     })

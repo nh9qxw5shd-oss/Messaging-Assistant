@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import type { TargetMetric } from "@/lib/types";
 import { rag } from "@/lib/ragLogic";
+import { SOS_ONLY_METRIC } from "@/lib/constants";
 import clsx from "clsx";
 
 interface Props {
@@ -38,7 +39,7 @@ function AutoExpandTextarea({
       placeholder={placeholder}
       rows={1}
       className={clsx(
-        "w-full resize-none bg-transparent text-xs leading-snug",
+        "w-full resize-none bg-transparent leading-snug",
         "focus:outline-none placeholder:text-muted/50",
         disabled && "opacity-50 cursor-not-allowed"
       )}
@@ -51,13 +52,15 @@ function NumberInput({
   onChange,
   disabled,
   placeholder,
+  suffix,
 }: {
   value: number | string;
   onChange: (v: number | string) => void;
   disabled?: boolean;
   placeholder?: string;
+  suffix?: string;
 }) {
-  return (
+  const input = (
     <input
       type="number"
       step="any"
@@ -68,21 +71,28 @@ function NumberInput({
         onChange(e.target.value === "" ? "" : Number(e.target.value))
       }
       className={clsx(
-        "w-full bg-transparent text-xs text-center",
+        "w-full bg-transparent text-center",
         "focus:outline-none placeholder:text-muted/50",
         disabled && "opacity-50 cursor-not-allowed"
       )}
     />
   );
+  if (!suffix) return input;
+  return (
+    <div className="flex items-center gap-0.5">
+      {input}
+      <span className="text-muted shrink-0">{suffix}</span>
+    </div>
+  );
 }
 
 export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }: Props) {
-  const thCls = "text-[10px] font-mono uppercase tracking-widest text-muted pb-2 text-left px-2";
+  const thCls = "font-mono uppercase tracking-widest text-muted pb-2 text-left px-2";
   const tdCls = "px-2 py-1.5 border-b border-grid/40 align-top";
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
+      <table className="w-full border-collapse">
         <thead>
           <tr>
             <th className={clsx(thCls, "w-8 text-center")}>RAG</th>
@@ -116,7 +126,7 @@ export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }
                     disabled={locked}
                     onChange={(e) => onUpdate(i, { name: e.target.value })}
                     className={clsx(
-                      "w-full bg-transparent text-xs text-ink focus:outline-none",
+                      "w-full bg-transparent text-ink focus:outline-none",
                       locked && "opacity-70 cursor-not-allowed"
                     )}
                   />
@@ -127,6 +137,7 @@ export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }
                   <NumberInput
                     value={m.value}
                     onChange={(v) => onUpdate(i, { value: v })}
+                    suffix={m.name.trim().toLowerCase() === SOS_ONLY_METRIC ? "%" : undefined}
                   />
                 </td>
 
@@ -157,7 +168,7 @@ export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }
                       onUpdate(i, { dir: e.target.value as "higher" | "lower" })
                     }
                     className={clsx(
-                      "w-full bg-transparent text-xs focus:outline-none cursor-pointer",
+                      "w-full bg-transparent focus:outline-none cursor-pointer",
                       locked && "opacity-50 cursor-not-allowed"
                     )}
                   >
@@ -180,7 +191,7 @@ export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }
                   <td className={clsx(tdCls, "text-center")}>
                     <button
                       onClick={() => onRemove(i)}
-                      className="text-muted hover:text-bad text-xs transition-colors leading-none"
+                      className="text-muted hover:text-bad transition-colors leading-none"
                       title="Remove metric"
                     >
                       ✕

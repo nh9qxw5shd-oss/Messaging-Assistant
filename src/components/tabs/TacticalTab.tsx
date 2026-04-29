@@ -6,8 +6,8 @@ import StatusSelect from "@/components/shared/StatusSelect";
 import PerfTable from "@/components/shared/PerfTable";
 import { LONG_OPS } from "@/lib/constants";
 
-const labelCls = "block font-mono text-[10px] uppercase tracking-widest text-muted mb-1.5";
-const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-sm text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
+const labelCls = "block font-mono uppercase tracking-widest text-muted mb-1.5";
+const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
 const sectionCls = "flex flex-col gap-3";
 
 export default function TacticalTab() {
@@ -23,13 +23,13 @@ export default function TacticalTab() {
     <div className="flex flex-col gap-5">
       {/* Greeting */}
       <div className={sectionCls}>
-        <label className={labelCls}>Greeting / Intro</label>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Greeting / Intro</h4>
         <AutoTextarea value={tac.intro} onChange={(v) => setTac({ intro: v })} />
       </div>
 
       {/* Control Command Team */}
       <div>
-        <h4 className="font-sans font-semibold text-sm text-ink/80 mb-2">Control Command Team</h4>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Control Command Team</h4>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>SNDM</label>
@@ -44,19 +44,19 @@ export default function TacticalTab() {
 
       {/* Operational Status */}
       <div className={sectionCls}>
-        <label className={labelCls}>Operational Status</label>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Operational Status</h4>
         <StatusSelect value={tac.status} options={LONG_OPS} onChange={(v) => setTac({ status: v })} />
       </div>
 
       {/* Safety */}
       <div className={sectionCls}>
-        <label className={labelCls}>Safety Incidents/Accidents</label>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Safety Incidents/Accidents</h4>
         <AutoTextarea value={tac.safety} onChange={(v) => setTac({ safety: v })} placeholder="Nil" />
       </div>
 
       {/* Performance */}
       <div>
-        <h4 className="font-sans font-semibold text-sm text-ink/80 mb-2">Route Performance</h4>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Route Performance</h4>
         <PerfTable
           metrics={tac.perf}
           locked
@@ -66,21 +66,21 @@ export default function TacticalTab() {
 
       {/* Incidents */}
       <div className={sectionCls}>
-        <label className={labelCls}>Incidents ongoing/concluded since last update</label>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Incidents ongoing/concluded since last update</h4>
         <AutoTextarea value={tac.incidents} onChange={(v) => setTac({ incidents: v })} />
       </div>
 
       {/* Late running */}
       <div>
-        <h4 className="font-sans font-semibold text-sm text-ink/80 mb-2">Late Running Services</h4>
+        <h4 className="font-sans font-semibold text-ink/80 mb-2">Late Running Services</h4>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className="text-left font-mono text-[10px] uppercase tracking-widest text-muted pb-2 px-2 w-16">TOC</th>
-                <th className="text-left font-mono text-[10px] uppercase tracking-widest text-muted pb-2 px-2">🟪 20min+</th>
-                <th className="text-left font-mono text-[10px] uppercase tracking-widest text-muted pb-2 px-2">🟥 10–20min</th>
-                <th className="text-left font-mono text-[10px] uppercase tracking-widest text-muted pb-2 px-2">Interventions</th>
+                <th className="text-left font-mono uppercase tracking-widest text-muted pb-2 px-2 w-16">TOC</th>
+                <th className="text-left font-mono uppercase tracking-widest text-muted pb-2 px-2">🟪 20min+</th>
+                <th className="text-left font-mono uppercase tracking-widest text-muted pb-2 px-2">🟥 10–20min</th>
+                <th className="text-left font-mono uppercase tracking-widest text-muted pb-2 px-2">Interventions</th>
               </tr>
             </thead>
             <tbody>
@@ -109,11 +109,11 @@ export default function TacticalTab() {
       {/* Seasonal slot */}
       <div className={sectionCls}>
         <div className="flex items-center justify-between mb-1">
-          <label className={labelCls}>Seasonal Slot</label>
+          <h4 className="font-sans font-semibold text-ink/80">Seasonal Slot</h4>
           {tacTemplates.length > 0 && (
             <button
               onClick={() => setShowTemplates(!showTemplates)}
-              className="font-mono text-[10px] uppercase tracking-widest text-accent hover:text-accent/80 transition-colors"
+              className="font-mono uppercase tracking-widest text-accent hover:text-accent/80 transition-colors"
             >
               Load template ↓
             </button>
@@ -125,7 +125,7 @@ export default function TacticalTab() {
               <button
                 key={t.id}
                 onClick={() => { setTac({ seasonal: t.content }); setShowTemplates(false); }}
-                className="text-left text-xs text-ink hover:text-accent px-2 py-1 rounded hover:bg-panel transition-colors"
+                className="text-left text-ink hover:text-accent px-2 py-1 rounded hover:bg-panel transition-colors"
               >
                 {t.season}
               </button>

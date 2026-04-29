@@ -5,7 +5,7 @@ import StatusSelect from "@/components/shared/StatusSelect";
 import PerfTable from "@/components/shared/PerfTable";
 import { LONG_OPS } from "@/lib/constants";
 
-const labelCls = "block font-mono text-[10px] uppercase tracking-widest text-muted mb-1.5";
+const h4Cls = "font-sans font-semibold text-ink/80 mb-2";
 const sectionCls = "flex flex-col gap-3";
 
 export default function StrategicAMTab() {
@@ -14,7 +14,7 @@ export default function StrategicAMTab() {
   return (
     <div className="flex flex-col gap-5">
       <div className={sectionCls}>
-        <label className={labelCls}>Executive Summary</label>
+        <h4 className={h4Cls}>Executive Summary</h4>
         <AutoTextarea
           value={str_am.exec}
           onChange={(v) => setStrAM({ exec: v })}
@@ -24,12 +24,12 @@ export default function StrategicAMTab() {
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Operational Status</label>
+        <h4 className={h4Cls}>Operational Status</h4>
         <StatusSelect value={str_am.status} options={LONG_OPS} onChange={(v) => setStrAM({ status: v })} />
       </div>
 
       <div>
-        <h4 className="font-sans font-semibold text-sm text-ink/80 mt-2 mb-2">Performance Snapshot</h4>
+        <h4 className={h4Cls}>Performance Snapshot</h4>
         <PerfTable
           metrics={str_am.perf}
           locked
@@ -38,7 +38,7 @@ export default function StrategicAMTab() {
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Performance Trends</label>
+        <h4 className={h4Cls}>Performance Trends</h4>
         <AutoTextarea
           value={str_am.trends}
           onChange={(v) => setStrAM({ trends: v })}
@@ -48,7 +48,7 @@ export default function StrategicAMTab() {
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Key Service Interventions & Contingency Plans</label>
+        <h4 className={h4Cls}>Key Service Interventions & Contingency Plans</h4>
         <AutoTextarea
           value={str_am.interv}
           onChange={(v) => setStrAM({ interv: v })}
@@ -58,7 +58,7 @@ export default function StrategicAMTab() {
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Opportunities to Improve & Build Resilience for the P.M. Peak</label>
+        <h4 className={h4Cls}>Opportunities to Improve & Build Resilience for the P.M. Peak</h4>
         <AutoTextarea
           value={str_am.opps}
           onChange={(v) => setStrAM({ opps: v })}
@@ -68,7 +68,7 @@ export default function StrategicAMTab() {
       </div>
 
       <div className={sectionCls}>
-        <label className={labelCls}>Forward View</label>
+        <h4 className={h4Cls}>Forward View</h4>
         <AutoTextarea
           value={str_am.forward}
           onChange={(v) => setStrAM({ forward: v })}
