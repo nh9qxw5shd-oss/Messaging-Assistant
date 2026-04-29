@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import type { TargetMetric } from "@/lib/types";
 import { rag } from "@/lib/ragLogic";
+import { SOS_ONLY_METRIC } from "@/lib/constants";
 import clsx from "clsx";
 
 interface Props {
@@ -51,13 +52,15 @@ function NumberInput({
   onChange,
   disabled,
   placeholder,
+  suffix,
 }: {
   value: number | string;
   onChange: (v: number | string) => void;
   disabled?: boolean;
   placeholder?: string;
+  suffix?: string;
 }) {
-  return (
+  const input = (
     <input
       type="number"
       step="any"
@@ -73,6 +76,13 @@ function NumberInput({
         disabled && "opacity-50 cursor-not-allowed"
       )}
     />
+  );
+  if (!suffix) return input;
+  return (
+    <div className="flex items-center gap-0.5">
+      {input}
+      <span className="text-muted shrink-0">{suffix}</span>
+    </div>
   );
 }
 
@@ -127,6 +137,7 @@ export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }
                   <NumberInput
                     value={m.value}
                     onChange={(v) => onUpdate(i, { value: v })}
+                    suffix={m.name.trim().toLowerCase() === SOS_ONLY_METRIC ? "%" : undefined}
                   />
                 </td>
 
