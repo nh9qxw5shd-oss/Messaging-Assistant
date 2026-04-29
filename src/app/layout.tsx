@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Messaging Assistant — East Midlands Route",
   description: "Operational messaging tool for the East Midlands Control Centre.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
