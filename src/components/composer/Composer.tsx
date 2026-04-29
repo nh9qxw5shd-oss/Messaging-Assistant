@@ -83,7 +83,7 @@ export default function Composer() {
         readOnly
         placeholder={isConfigTab ? "Select a message tab to build." : "Built message appears here…"}
         minRows={10}
-        className="font-mono leading-relaxed min-h-[200px]"
+        className="font-mono leading-relaxed min-h-[200px] max-h-[45vh] overflow-y-auto"
       />
 
       {/* Actions */}
