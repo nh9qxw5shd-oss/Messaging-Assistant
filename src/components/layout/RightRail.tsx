@@ -25,7 +25,7 @@ export default function RightRail() {
   return (
     <div className="flex flex-col gap-0 min-h-0">
       {/* Tab nav */}
-      <nav className="flex flex-wrap gap-1.5 px-4 pt-4 pb-0 border-b border-grid/60">
+      <nav className="flex flex-wrap gap-1 px-4 pt-4 pb-0 border-b border-grid/50">
         {TABS.map((tab) => {
           const active = tab === activeTab;
           return (
@@ -33,24 +33,33 @@ export default function RightRail() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={clsx(
-                "relative px-3 py-2 rounded-t font-mono uppercase tracking-wider transition-all duration-150",
-                "focus:outline-none",
+                "relative px-3.5 py-2.5 rounded-t-lg font-mono text-xs uppercase tracking-wider",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
+                "transition-all duration-200",
                 active
-                  ? "text-accent bg-panel border-t border-x border-grid -mb-px z-10"
-                  : "text-muted hover:text-ink hover:bg-panel2/60"
+                  ? [
+                      "text-accent bg-panel border-t border-x border-grid/70",
+                      "-mb-px z-10",
+                      "shadow-[0_-2px_12px_rgba(224,82,6,0.08)]",
+                    ]
+                  : "text-muted hover:text-ink hover:bg-panel2/70"
               )}
             >
               {TAB_LABELS[tab]}
+              {/* Animated orange underline on active tab */}
               {active && (
                 <span className="absolute bottom-0 inset-x-0 h-px bg-panel" />
+              )}
+              {active && (
+                <span className="absolute top-0 inset-x-4 h-px bg-accent/50 rounded-full animate-fade-in" />
               )}
             </button>
           );
         })}
       </nav>
 
-      {/* Panel */}
-      <div className="flex-1 overflow-y-auto p-4">
+      {/* Panel — keyed so content animates in on tab switch */}
+      <div key={activeTab} className="flex-1 overflow-y-auto p-4 animate-fade-up">
         {TAB_PANELS[activeTab]}
       </div>
     </div>
