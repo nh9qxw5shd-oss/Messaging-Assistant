@@ -15,19 +15,19 @@ import clsx from "clsx";
 
 // ─── Shared style tokens ──────────────────────────────────────────────────────
 
-const lbl = "block text-[10px] font-mono uppercase tracking-widest text-muted mb-1";
+const lbl = "block font-mono uppercase tracking-widest text-muted mb-1.5";
 const inp =
-  "w-full rounded bg-panel2 border border-grid px-2.5 py-1.5 text-sm text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/50";
+  "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
 const sel =
-  "w-full rounded bg-panel2 border border-grid px-2.5 py-1.5 text-sm text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors cursor-pointer";
+  "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors cursor-pointer";
 const row = "grid gap-2";
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-muted/60 border-b border-grid/40 pb-0.5">
+    <div className="flex flex-col gap-3">
+      <div className="font-mono uppercase tracking-widest text-muted/60 text-xs border-b border-grid/40 pb-1">
         {title}
       </div>
       {children}
@@ -62,7 +62,7 @@ function ChipButton({
       type="button"
       onClick={onClick}
       className={clsx(
-        "px-2 py-1 rounded text-[11px] border transition-colors text-left",
+        "px-3 py-1.5 rounded text-sm border transition-colors text-left",
         selected
           ? "bg-accent/15 border-accent text-accent"
           : "bg-panel2 border-grid text-muted hover:border-accent/50 hover:text-ink"
@@ -166,7 +166,7 @@ export default function SafetyTab() {
                 type="button"
                 onClick={() => update({ statusType: s })}
                 className={clsx(
-                  "py-1.5 rounded text-xs font-mono border transition-colors",
+                  "py-2 rounded text-sm font-mono border transition-colors",
                   sf.statusType === s
                     ? "bg-accent/15 border-accent text-accent"
                     : "bg-panel2 border-grid text-muted hover:text-ink"
@@ -393,7 +393,7 @@ export default function SafetyTab() {
                   />
                 </Field>
                 <div className="flex items-end pb-0.5">
-                  <label className="flex items-center gap-2 text-xs text-ink cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
                     <input
                       type="checkbox"
                       checked={sf.isLateReport}
@@ -417,7 +417,7 @@ export default function SafetyTab() {
           )}
 
           {sf.category === "wstcf_autumn" && (
-            <label className="flex items-center gap-2 text-xs text-ink cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
               <input
                 type="checkbox"
                 checked={sf.isAutumnRelated}
@@ -428,7 +428,7 @@ export default function SafetyTab() {
             </label>
           )}
 
-          <label className="flex items-center gap-2 text-xs text-muted cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-muted cursor-pointer">
             <input
               type="checkbox"
               checked={sf.headerOverride}
@@ -448,7 +448,7 @@ export default function SafetyTab() {
             placeholder="Technical detail — signal IDs, speeds, sequences, cause if known. No editorialising."
             className={`${inp} resize-y`}
           />
-          <div className="text-[10px] text-muted/60 font-mono">
+          <div className="text-xs text-muted/60 font-mono">
             {sf.mechanism.length} chars — include signal IDs, times, technical cause
           </div>
         </Section>
@@ -500,7 +500,7 @@ export default function SafetyTab() {
                       value={selChip?.param ?? ""}
                       onChange={(e) => setChipParam(chip.id, e.target.value)}
                       placeholder={chip.paramPlaceholder}
-                      className={`${inp} mt-1 text-xs`}
+                      className={`${inp} mt-1`}
                     />
                   )}
                 </div>
@@ -552,7 +552,7 @@ export default function SafetyTab() {
             onClick={() => {
               if (window.confirm("Clear the safety form?")) clearSafety();
             }}
-            className="px-3 py-1.5 rounded text-xs font-semibold bg-warn/10 text-warn border border-warn/30 hover:bg-warn/20 transition-colors"
+            className="px-4 py-2 rounded font-semibold bg-warn/10 text-warn border border-warn/30 hover:bg-warn/20 transition-colors"
           >
             Clear form
           </button>
@@ -562,12 +562,12 @@ export default function SafetyTab() {
       {/* ── Right: live preview ────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col gap-3 min-w-0">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-muted">
+          <span className="text-xs font-mono uppercase tracking-widest text-muted">
             Live preview
           </span>
           <button
             onClick={copyToClipboard}
-            className="px-3 py-1 rounded text-xs font-mono border border-accent/50 text-accent hover:bg-accent/10 transition-colors"
+            className="px-3 py-1.5 rounded text-sm font-mono border border-accent/50 text-accent hover:bg-accent/10 transition-colors"
           >
             Copy
           </button>
@@ -587,11 +587,11 @@ export default function SafetyTab() {
         {/* Linter */}
         {lint.warnings.length > 0 && (
           <div className="flex flex-col gap-1">
-            <div className="text-[9px] font-mono uppercase tracking-widest text-warn/70">
+            <div className="text-xs font-mono uppercase tracking-widest text-warn/70">
               Linter warnings
             </div>
             {lint.warnings.map((w, i) => (
-              <div key={i} className="flex items-start gap-1.5 text-[11px] text-warn">
+              <div key={i} className="flex items-start gap-1.5 text-sm text-warn">
                 <span className="mt-px">⚠</span>
                 <span>{w}</span>
               </div>
@@ -599,11 +599,11 @@ export default function SafetyTab() {
           </div>
         )}
         {lint.ok && rendered && (
-          <div className="text-[11px] text-green-500/70 font-mono">✓ Linter: all checks passed</div>
+          <div className="text-sm text-green-500/70 font-mono">✓ Linter: all checks passed</div>
         )}
 
         {/* Beat 1 preview inline */}
-        <div className="text-[9px] font-mono text-muted/50 uppercase tracking-widest">
+        <div className="text-xs font-mono text-muted/50 uppercase tracking-widest">
           Beat 1 auto-built from structured fields · Beat 2 from mechanism field · Beat 4 from chips
         </div>
       </div>
