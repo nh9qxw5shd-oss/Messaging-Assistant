@@ -49,6 +49,7 @@ export default function Composer() {
       }
       showToast("Copied");
     } catch {
+      // Last-ditch fallback
       const ta = document.createElement("textarea");
       ta.value = text;
       document.body.appendChild(ta);
@@ -66,10 +67,10 @@ export default function Composer() {
     <div className="flex flex-col gap-4">
       {/* Section label */}
       <div className="flex items-center gap-2">
-        <span className="font-mono text-xs uppercase tracking-widest text-muted/80">
+        <span className="font-mono uppercase tracking-widest text-muted">
           Composer
         </span>
-        <span className="text-muted/40 font-mono text-xs">· Ctrl+Enter to build</span>
+        <span className="text-muted/50 font-mono">· Ctrl+Enter to build</span>
       </div>
 
       {/* Banner preview */}
@@ -82,7 +83,7 @@ export default function Composer() {
         readOnly
         placeholder={isConfigTab ? "Select a message tab to build." : "Built message appears here…"}
         minRows={10}
-        className="font-mono leading-relaxed min-h-[200px] max-h-[45vh] overflow-y-auto rounded-xl bg-bg/60 border border-grid/60"
+        className="font-mono leading-relaxed min-h-[200px] max-h-[45vh] overflow-y-auto"
       />
 
       {/* Actions */}
@@ -91,11 +92,10 @@ export default function Composer() {
           <button
             onClick={build}
             className={clsx(
-              "flex-1 px-4 py-2.5 rounded-xl font-semibold font-sans text-sm",
-              "bg-accent text-white",
-              "hover:bg-accent-dim hover:shadow-orange-glow",
-              "shadow-orange-glow-sm",
-              "active:scale-[0.97]",
+              "flex-1 px-4 py-2.5 rounded font-semibold font-sans",
+              "bg-accent text-white border border-accent/80",
+              "hover:bg-accent-dim transition-colors duration-150",
+              "shadow-orange-glow-sm"
             )}
           >
             Build message
@@ -104,11 +104,10 @@ export default function Composer() {
             onClick={copy}
             disabled={!hasMessage}
             className={clsx(
-              "px-4 py-2.5 rounded-xl font-semibold font-sans text-sm",
-              "bg-panel2/80 text-ink border border-grid/70",
-              "hover:border-accent/50 hover:bg-panel2",
-              "disabled:opacity-40 disabled:cursor-not-allowed",
-              "active:scale-[0.97]",
+              "px-4 py-2.5 rounded font-semibold font-sans",
+              "bg-panel2 text-ink border border-grid",
+              "hover:border-accent/50 transition-colors duration-150",
+              "disabled:opacity-40 disabled:cursor-not-allowed"
             )}
           >
             Copy
@@ -117,10 +116,10 @@ export default function Composer() {
       )}
 
       {/* Divider */}
-      <div className="border-t border-grid/40" />
+      <div className="border-t border-grid/60" />
 
       {/* Emoji tray */}
-      <span className="font-mono text-xs uppercase tracking-widest text-muted/80">
+      <span className="font-mono uppercase tracking-widest text-muted">
         Emoji tray · click to copy
       </span>
       <EmojiTray />

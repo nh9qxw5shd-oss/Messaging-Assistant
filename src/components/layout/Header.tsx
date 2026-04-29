@@ -32,24 +32,16 @@ export default function Header() {
     <header className="
       sticky top-0 z-40
       flex items-center gap-4 px-5 py-3
-      glass border-b border-[var(--glass-border)]
-      shadow-[0_1px_0_rgba(224,82,6,0.12),0_4px_24px_rgba(0,0,0,0.18)]
+      bg-panel border-b border-grid
+      shadow-[0_1px_0_rgba(224,82,6,0.15)]
     ">
       {/* Logo / wordmark */}
       <div className="flex items-center gap-3 min-w-0">
-        {/* Orange message bubble icon */}
-        <span className="flex-shrink-0 w-7 h-7 rounded-md bg-accent shadow-orange-glow-sm flex items-center justify-center">
-          <svg width="14" height="14" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="2" width="28" height="21" rx="7" ry="7" fill="white" opacity="0.92"/>
-            <path d="M 5 23 L 2 30 L 13 23 Z" fill="white" opacity="0.92"/>
-            <rect x="7" y="8.5" width="18" height="3" rx="1.5" fill="#E05206"/>
-            <rect x="7" y="14" width="12" height="3" rx="1.5" fill="#E05206"/>
-          </svg>
-        </span>
+        <span className="w-1.5 h-5 rounded-sm bg-accent shadow-orange-glow-sm flex-shrink-0" />
         <h1 className="font-display font-semibold text-base text-ink tracking-tight whitespace-nowrap">
           Messaging Assistant
         </h1>
-        <span className="font-mono text-[10px] text-muted/70 uppercase tracking-widest bg-panel2 border border-grid px-1.5 py-0.5 rounded-md">v5</span>
+        <span className="font-mono text-[10px] text-muted uppercase tracking-widest">v5</span>
       </div>
 
       {/* Route + timestamp */}
@@ -59,10 +51,10 @@ export default function Header() {
           value={meta.route}
           onChange={(e) => setMeta({ route: e.target.value })}
           className="
-            w-52 rounded-lg bg-bg/60 border border-grid px-3 py-1.5
-            text-ink font-sans text-sm
-            hover:border-accent/40 focus:border-accent/60
-            placeholder:text-muted/40
+            w-52 rounded bg-bg border border-grid px-2.5 py-1.5
+            text-ink font-sans
+            focus:outline-none focus:border-accent/60
+            transition-colors placeholder:text-muted/50
           "
           placeholder="Route / Area"
         />
@@ -71,9 +63,10 @@ export default function Header() {
           value={meta.stamp}
           onChange={(e) => setMeta({ stamp: e.target.value })}
           className="
-            rounded-lg bg-bg/60 border border-grid px-3 py-1.5
-            text-muted font-mono text-sm
-            hover:border-accent/40 focus:border-accent/60
+            rounded bg-bg border border-grid px-2.5 py-1.5
+            text-muted font-mono
+            focus:outline-none focus:border-accent/60
+            transition-colors
           "
           style={{ colorScheme: theme === "dark" ? "dark" : "light" }}
         />
@@ -81,13 +74,13 @@ export default function Header() {
 
       {/* Status pills + theme toggle */}
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted/70 bg-panel2/60 border border-grid/60 rounded-full px-2.5 py-1">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-muted border border-grid rounded px-2 py-1">
           Autosaves locally
         </span>
-        <span className={`font-mono text-[10px] uppercase tracking-widest rounded-full px-2.5 py-1 ${
+        <span className={`font-mono text-[10px] uppercase tracking-widest border rounded px-2 py-1 ${
           supabaseReady
-            ? "text-good bg-good/10 border border-good/25"
-            : "text-muted/70 bg-panel2/60 border border-grid/60"
+            ? "text-good border-good/30"
+            : "text-muted border-grid"
         }`}>
           {supabaseReady ? "Supabase ✓" : "Supabase —"}
         </span>
@@ -97,9 +90,10 @@ export default function Header() {
           onClick={toggleTheme}
           title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           className="
-            flex items-center justify-center w-8 h-8
-            rounded-lg border border-grid/70 bg-panel2/50
-            text-muted hover:text-ink hover:border-accent/50 hover:bg-accent/10
+            flex items-center justify-center w-7 h-7
+            rounded border border-grid
+            text-muted hover:text-ink hover:border-accent/50
+            transition-colors
           "
         >
           {theme === "dark" ? <SunIcon /> : <MoonIcon />}
