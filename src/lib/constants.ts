@@ -1,6 +1,4 @@
 import type {
-  SafetyTypeId,
-  SafetyState,
   SoSState,
   StrategicAMState,
   StrategicPMState,
@@ -8,6 +6,7 @@ import type {
   TargetMetric,
   TabKey,
 } from "./types";
+export { DEFAULT_SAFETY_INCIDENT } from "./safety/constants";
 
 // ─── Operational status options ───────────────────────────────────────────────
 
@@ -27,35 +26,6 @@ export const SHORT_OPS = [
   "⚫ Severe Disruption",
 ] as const;
 
-// ─── Safety message reference data ────────────────────────────────────────────
-
-export const SAFETY_TYPES: { id: SafetyTypeId; label: string }[] = [
-  { id: "near_miss",    label: "Near miss" },
-  { id: "wrong_route",  label: "Wrong route" },
-  { id: "lb_poss",      label: "Line blockage / Possession irregularity" },
-  { id: "staff_acc",    label: "Staff accident / injury" },
-  { id: "sig_irreg",    label: "Signalling irregularity (COA / SPAR / WSF)" },
-  { id: "station_ops",  label: "Station / dispatch / overshoot incident" },
-  { id: "other",        label: "Other" },
-];
-
-export const SAFETY_SUBTYPES: Record<SafetyTypeId, string[]> = {
-  near_miss:   ["Level crossing", "Station end / trespass", "Track worker / worksite", "Other"],
-  wrong_route: ["Offered not taken", "Offered and taken", "Route set back / COA risk", "Other"],
-  lb_poss:     ["Line blockage irregularity", "SBSI / limits issue", "Possession irregularity", "Worksite protection issue", "Other"],
-  staff_acc:   ["Slip / trip / fall", "Strain / sprain", "Cut / burn / foreign body", "RTC / travel", "Assault", "Other"],
-  sig_irreg:   ["COA (G-R)", "SPAR", "WSF / signal washed out", "Points irregularity", "Other"],
-  station_ops: ["Door irregularity", "Dispatch against signal", "Station overshoot / set back", "Failed to call", "Other"],
-  other:       ["Other"],
-};
-
-export const SAFETY_STATUS = [
-  "Initial advice",
-  "Update",
-  "Correction",
-  "Closed / no further action",
-  "Investigation ongoing",
-] as const;
 
 // ─── Emoji tray ───────────────────────────────────────────────────────────────
 
@@ -162,24 +132,12 @@ export const DEFAULT_TAC: TacticalState = {
   seasonal: "",
 };
 
-export const DEFAULT_SAFETY: SafetyState = {
-  type: "near_miss",
-  subtype: "Level crossing",
-  location: "",
-  time: "",
-  asset: "",
-  people: "",
-  what: "",
-  actions: { ebr: false, mom: false, btp: false, screen: false, care: false, ffcctv: false },
-  status: "Initial advice",
-  owner: "",
-  notes: "",
-};
+export { DEFAULT_SAFETY_INCIDENT as DEFAULT_SAFETY } from "./safety/constants";
 
 // ─── Storage keys ─────────────────────────────────────────────────────────────
 
-export const LS_SESSION_KEY = "ma-session-v5";
-export const LS_BACKUP_KEY  = "ma-backups-v5";
+export const LS_SESSION_KEY = "ma-session-v6";
+export const LS_BACKUP_KEY  = "ma-backups-v6";
 export const BACKUP_KEEP    = 36;
 export const BACKUP_TTL_DAYS = 7;
 export const BACKUP_INTERVAL_MS = 5 * 60 * 1000;

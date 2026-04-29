@@ -1,0 +1,39 @@
+{
+  "description": "Staff accident — direct subject, no 'advises' verb",
+  "input": {
+    "statusType": "new",
+    "category": "staff_accident",
+    "subCategory": "strain_sprain",
+    "reporterType": "EMCC SSM",
+    "reporterQualifier": "",
+    "headcode": "",
+    "serviceTime": "",
+    "serviceOrigin": "",
+    "serviceDestination": "",
+    "unitNumber": "",
+    "location": "",
+    "locationShort": "",
+    "signalId": "",
+    "tcId": "",
+    "routeOffered": "",
+    "routeBooked": "",
+    "speedMph": "",
+    "ossSetMph": "",
+    "incidentTime": "",
+    "driverWelfare": "",
+    "driverReliefLocation": "",
+    "ipRole": "Foley Signaller",
+    "injuryPhrase": "injured their lower back pulling a lever from the frame",
+    "isLateReport": false,
+    "mechanism": "IP has significantly reduced mobility and will seek medical attention. Stoke MOM currently with the IP and Derby MOM en route. PRICE protocol observed (no cold compress available on location). Absence of up to 7 days currently expected.",
+    "actionChips": [
+      { "chipId": "care_plan", "param": "" }
+    ],
+    "delayOutcome": "",
+    "delayTime": "",
+    "delayMinutes": "",
+    "isAutumnRelated": false,
+    "headerOverride": false
+  },
+  "expected": "⚠️ *East Midlands Route - Advice of Staff Accident*\nIP — Foley Signaller has injured their lower back pulling a lever from the frame. IP has significantly reduced mobility and will seek medical attention. Stoke MOM currently with the IP and Derby MOM en route. PRICE protocol observed (no cold compress available on location). Absence of up to 7 days currently expected. Care plan owner appointed."
+}

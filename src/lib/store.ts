@@ -5,7 +5,7 @@ import type {
   StrategicAMState,
   StrategicPMState,
   TacticalState,
-  SafetyState,
+  SafetyIncidentState,
   TargetMetric,
   TabKey,
   BackupEntry,
@@ -18,7 +18,7 @@ import {
   DEFAULT_STR_AM,
   DEFAULT_STR_PM,
   DEFAULT_TAC,
-  DEFAULT_SAFETY,
+  DEFAULT_SAFETY_INCIDENT as DEFAULT_SAFETY,
   DEFAULT_TARGETS,
   LS_SESSION_KEY,
   LS_BACKUP_KEY,
@@ -74,7 +74,7 @@ export interface AppStore {
   str_am:     StrategicAMState;
   str_pm:     StrategicPMState;
   tac:        TacticalState;
-  safety_msg: SafetyState;
+  safety_msg: SafetyIncidentState;
 
   // Config state (from Supabase / defaults)
   targets:         TargetMetric[];
@@ -114,9 +114,8 @@ export interface AppStore {
   setTacLate: (key: keyof TacticalState["late"], value: string) => void;
 
   // ─── Safety ──────────────────────────────────────────────────────────────
-  setSafety:        (partial: Partial<SafetyState>) => void;
-  setSafetyAction:  (key: keyof SafetyState["actions"], value: boolean) => void;
-  clearSafety:      () => void;
+  setSafety:   (partial: Partial<SafetyIncidentState>) => void;
+  clearSafety: () => void;
 
   // ─── Targets ─────────────────────────────────────────────────────────────
   setTargets:    (targets: TargetMetric[]) => void;
@@ -279,15 +278,6 @@ export const useStore = create<AppStore>((set, get) => {
     // ─── Safety ──────────────────────────────────────────────────────────────
     setSafety: (partial) => {
       set((s) => ({ safety_msg: { ...s.safety_msg, ...partial } }));
-      persist();
-    },
-    setSafetyAction: (key, value) => {
-      set((s) => ({
-        safety_msg: {
-          ...s.safety_msg,
-          actions: { ...s.safety_msg.actions, [key]: value },
-        },
-      }));
       persist();
     },
     clearSafety: () => {

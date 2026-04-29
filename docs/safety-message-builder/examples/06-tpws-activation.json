@@ -1,0 +1,39 @@
+{
+  "description": "TPWS OSS activation — plain header, EMCC SSM reporter",
+  "input": {
+    "statusType": "new",
+    "category": "tpws_activation",
+    "subCategory": "oss",
+    "reporterType": "EMCC SSM",
+    "reporterQualifier": "",
+    "headcode": "1F07",
+    "serviceTime": "",
+    "serviceOrigin": "",
+    "serviceDestination": "",
+    "unitNumber": "",
+    "location": "Knighton Junction",
+    "locationShort": "",
+    "signalId": "LR321",
+    "tcId": "",
+    "routeOffered": "",
+    "routeBooked": "",
+    "speedMph": "90",
+    "ossSetMph": "90.5",
+    "incidentTime": "",
+    "driverWelfare": "",
+    "driverReliefLocation": "",
+    "ipRole": "",
+    "injuryPhrase": "",
+    "isLateReport": false,
+    "mechanism": "1F07 was temporarily held Leicester Stn awaiting EMR authority to proceed. Driver reports doing approx. 90mph at time of activation. 90.5mph PSR located 98m 26ch on the Dn Fast is the most likely current suspect although driver advises he may have missed AWS acknowledgment.",
+    "actionChips": [
+      { "chipId": "otdr", "param": "" }
+    ],
+    "delayOutcome": "",
+    "delayTime": "",
+    "delayMinutes": "",
+    "isAutumnRelated": false,
+    "headerOverride": false
+  },
+  "expected": "⚠️ *East Midlands Route - Advice of TPWS Activation*\nEMCC SSM advises 1F07 OSS TPWS activation in the area of signal LR321 Knighton Junction. 1F07 was temporarily held Leicester Stn awaiting EMR authority to proceed. Driver reports doing approx. 90mph at time of activation. 90.5mph PSR located 98m 26ch on the Dn Fast is the most likely current suspect although driver advises he may have missed AWS acknowledgment. OTDR download requested."
+}
