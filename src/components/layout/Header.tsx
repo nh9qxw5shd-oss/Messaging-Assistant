@@ -1,6 +1,30 @@
 "use client";
 import { useStore } from "@/lib/store";
 
+const MESSAGE_TIMES = [
+  { h: 5,  m: 30 },
+  { h: 9,  m: 0  },
+  { h: 11, m: 0  },
+  { h: 15, m: 0  },
+  { h: 20, m: 0  },
+  { h: 22, m: 0  },
+];
+
+function snapToMessageTime(stamp: string): string {
+  if (!stamp) return stamp;
+  const [datePart, timePart] = stamp.split("T");
+  if (!timePart) return stamp;
+  const [hStr, mStr] = timePart.split(":");
+  const totalMinutes = parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
+  let nearest = MESSAGE_TIMES[0];
+  let minDiff = Infinity;
+  for (const t of MESSAGE_TIMES) {
+    const diff = Math.abs(t.h * 60 + t.m - totalMinutes);
+    if (diff < minDiff) { minDiff = diff; nearest = t; }
+  }
+  return `${datePart}T${String(nearest.h).padStart(2, "0")}:${String(nearest.m).padStart(2, "0")}`;
+}
+
 function SunIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -62,6 +86,10 @@ export default function Header() {
           type="datetime-local"
           value={meta.stamp}
           onChange={(e) => setMeta({ stamp: e.target.value })}
+          onBlur={(e) => {
+            const snapped = snapToMessageTime(e.target.value);
+            if (snapped !== e.target.value) setMeta({ stamp: snapped });
+          }}
           className="
             rounded bg-bg border border-grid px-2.5 py-1.5
             text-muted font-mono
