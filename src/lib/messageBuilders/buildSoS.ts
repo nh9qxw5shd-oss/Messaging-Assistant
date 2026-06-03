@@ -1,12 +1,8 @@
 import type { MetaState, SoSState } from "../types";
 import { linesFromPerf, statusLinePx } from "../ragLogic";
-import { formatMeta } from "./shared";
 
-export function buildSoS(meta: MetaState, sos: SoSState): string {
+export function buildSoS(_meta: MetaState, sos: SoSState): string {
   const lines: string[] = [];
-
-  lines.push(formatMeta(meta));
-  lines.push("");
 
   lines.push(sos.intro || "");
   lines.push("");

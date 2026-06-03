@@ -1,12 +1,8 @@
 import type { MetaState, StrategicAMState } from "../types";
 import { linesFromPerf } from "../ragLogic";
-import { formatMeta } from "./shared";
 
-export function buildStrategicAM(meta: MetaState, s: StrategicAMState): string {
+export function buildStrategicAM(_meta: MetaState, s: StrategicAMState): string {
   const lines: string[] = [];
-
-  lines.push(formatMeta(meta));
-  lines.push("");
 
   lines.push("*Strategic Performance Update Post A.M. Peak (11:00)*");
   lines.push("");

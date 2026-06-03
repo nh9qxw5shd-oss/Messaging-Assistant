@@ -1,12 +1,8 @@
 import type { MetaState, TacticalState } from "../types";
 import { linesFromPerf } from "../ragLogic";
-import { formatMeta } from "./shared";
 
-export function buildTactical(meta: MetaState, tac: TacticalState): string {
+export function buildTactical(_meta: MetaState, tac: TacticalState): string {
   const lines: string[] = [];
-
-  lines.push(formatMeta(meta));
-  lines.push("");
 
   lines.push(tac.intro || "");
   lines.push("");
