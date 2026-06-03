@@ -1,12 +1,8 @@
 import type { MetaState, StrategicPMState } from "../types";
 import { linesFromPerf } from "../ragLogic";
-import { formatMeta } from "./shared";
 
-export function buildStrategicPM(meta: MetaState, s: StrategicPMState): string {
+export function buildStrategicPM(_meta: MetaState, s: StrategicPMState): string {
   const lines: string[] = [];
-
-  lines.push(formatMeta(meta));
-  lines.push("");
 
   lines.push("*Strategic Performance Update Post P.M. Peak (20:00)*");
   lines.push("");

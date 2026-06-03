@@ -1,30 +1,6 @@
 "use client";
 import { useStore } from "@/lib/store";
 
-const MESSAGE_TIMES = [
-  { h: 5,  m: 30 },
-  { h: 9,  m: 0  },
-  { h: 11, m: 0  },
-  { h: 15, m: 0  },
-  { h: 20, m: 0  },
-  { h: 22, m: 0  },
-];
-
-function snapToMessageTime(stamp: string): string {
-  if (!stamp) return stamp;
-  const [datePart, timePart] = stamp.split("T");
-  if (!timePart) return stamp;
-  const [hStr, mStr] = timePart.split(":");
-  const totalMinutes = parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
-  let nearest = MESSAGE_TIMES[0];
-  let minDiff = Infinity;
-  for (const t of MESSAGE_TIMES) {
-    const diff = Math.abs(t.h * 60 + t.m - totalMinutes);
-    if (diff < minDiff) { minDiff = diff; nearest = t; }
-  }
-  return `${datePart}T${String(nearest.h).padStart(2, "0")}:${String(nearest.m).padStart(2, "0")}`;
-}
-
 function SunIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -50,7 +26,7 @@ function MoonIcon() {
 }
 
 export default function Header() {
-  const { meta, setMeta, supabaseReady, theme, toggleTheme } = useStore();
+  const { supabaseReady, theme, toggleTheme } = useStore();
 
   return (
     <header className="
@@ -68,40 +44,8 @@ export default function Header() {
         <span className="font-mono text-[10px] text-muted uppercase tracking-widest">v5</span>
       </div>
 
-      {/* Route + timestamp */}
-      <div className="flex items-center gap-2 ml-auto">
-        <input
-          type="text"
-          value={meta.route}
-          onChange={(e) => setMeta({ route: e.target.value })}
-          className="
-            w-52 rounded bg-bg border border-grid px-2.5 py-1.5
-            text-ink font-sans
-            focus:outline-none focus:border-accent/60
-            transition-colors placeholder:text-muted/50
-          "
-          placeholder="Route / Area"
-        />
-        <input
-          type="datetime-local"
-          value={meta.stamp}
-          onChange={(e) => setMeta({ stamp: e.target.value })}
-          onBlur={(e) => {
-            const snapped = snapToMessageTime(e.target.value);
-            if (snapped !== e.target.value) setMeta({ stamp: snapped });
-          }}
-          className="
-            rounded bg-bg border border-grid px-2.5 py-1.5
-            text-muted font-mono
-            focus:outline-none focus:border-accent/60
-            transition-colors
-          "
-          style={{ colorScheme: theme === "dark" ? "dark" : "light" }}
-        />
-      </div>
-
       {/* Status pills + theme toggle */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-auto">
         <span className="font-mono text-[10px] uppercase tracking-widest text-muted border border-grid rounded px-2 py-1">
           Autosaves locally
         </span>
