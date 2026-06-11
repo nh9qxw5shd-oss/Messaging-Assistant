@@ -7,7 +7,7 @@ import clsx from "clsx";
 
 interface Props {
   metrics: TargetMetric[];
-  locked?: boolean; // true = name/target/amber read-only (perf view); false = targets admin
+  locked?: boolean; // true = name/target read-only (perf view); false = targets admin. Amber is always auto-calculated.
   onUpdate: (index: number, partial: Partial<TargetMetric>) => void;
   onRemove?: (index: number) => void; // only shown when not locked
 }
@@ -150,12 +150,15 @@ export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }
                   />
                 </td>
 
-                {/* Amber */}
-                <td className={tdCls}>
+                {/* Amber — auto-calculated from target, never editable */}
+                <td
+                  className={tdCls}
+                  title="Auto-calculated: target −5 (higher-is-better) or +0.5 (lower-is-better)"
+                >
                   <NumberInput
                     value={m.amber}
-                    onChange={(v) => onUpdate(i, { amber: v })}
-                    disabled={locked}
+                    onChange={() => {}}
+                    disabled
                   />
                 </td>
 

@@ -26,6 +26,7 @@ import {
   BACKUP_TTL_DAYS,
 } from "./constants";
 import { propagateAll } from "./targetSync";
+import { applyAutoAmber, autoAmber } from "./ragLogic";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -286,8 +287,9 @@ export const useStore = create<AppStore>((set, get) => {
     },
 
     // ─── Targets ─────────────────────────────────────────────────────────────
-    setTargets: (targets) => {
+    setTargets: (targetsIn) => {
       set((s) => {
+        const targets = applyAutoAmber(targetsIn);
         const { sosPerf, tacPerf, amPerf, pmPerf } = syncPerf(targets, s);
         return {
           targets,
@@ -302,7 +304,8 @@ export const useStore = create<AppStore>((set, get) => {
     updateTarget: (index, partial) => {
       set((s) => {
         const targets = [...s.targets];
-        targets[index] = { ...targets[index], ...partial };
+        const merged = { ...targets[index], ...partial };
+        targets[index] = { ...merged, amber: autoAmber(merged.target, merged.dir) };
         const { sosPerf, tacPerf, amPerf, pmPerf } = syncPerf(targets, s);
         return {
           targets,
@@ -442,7 +445,7 @@ export const useStore = create<AppStore>((set, get) => {
         const parsed = JSON.parse(json);
         set((s) => ({
           meta:       parsed.meta       ? { ...s.meta,       ...parsed.meta }       : s.meta,
-          targets:    parsed.targets    ?? s.targets,
+          targets:    parsed.targets    ? applyAutoAmber(parsed.targets) : s.targets,
           sos:        parsed.sos        ? { ...s.sos,        ...parsed.sos }        : s.sos,
           str_am:     parsed.str_am     ? { ...s.str_am,     ...parsed.str_am }     : s.str_am,
           str_pm:     parsed.str_pm     ? { ...s.str_pm,     ...parsed.str_pm }     : s.str_pm,
