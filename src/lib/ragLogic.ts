@@ -13,6 +13,26 @@ function ragVariance(num: number): string {
   return "🔴";
 }
 
+// ─── Auto-generated amber threshold ───────────────────────────────────────────
+
+// Amber is derived from the target, never entered manually:
+//   higher-is-better (Route/EMR/XC/GTR T3) → target − 5 percentage points
+//   lower-is-better  (EMR Cancellations)   → target + 0.5 percentage points
+export function autoAmber(
+  target: number | string,
+  dir: "higher" | "lower"
+): number | string {
+  if (target === "" || target === null || target === undefined) return "";
+  const t = Number(target);
+  if (isNaN(t)) return "";
+  const amber = dir === "lower" ? t + 0.5 : t - 5;
+  return Math.round(amber * 100) / 100;
+}
+
+export function applyAutoAmber(metrics: TargetMetric[]): TargetMetric[] {
+  return metrics.map((m) => ({ ...m, amber: autoAmber(m.target, m.dir) }));
+}
+
 export function rag(metric: TargetMetric): string {
   const v = metric.value;
   if (v === "" || v === null || v === undefined) return "⚪";

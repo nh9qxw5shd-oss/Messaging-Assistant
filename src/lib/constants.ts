@@ -37,12 +37,14 @@ export const EMOJI_TRAY = [
 
 // ─── Default targets (fallback when no Supabase data) ─────────────────────────
 
+// Amber values are auto-generated from the target (see autoAmber in ragLogic.ts):
+// higher-is-better → target − 5, lower-is-better → target + 0.5
 export const DEFAULT_TARGETS: TargetMetric[] = [
-  { name: "Route T3 %", value: "", target: 78.4, amber: 77.0, dir: "higher", notes: "Route T3 headline" },
-  { name: "EMR T3 %",   value: "", target: 69.9, amber: 72.0, dir: "higher", notes: "EMR T3" },
-  { name: "EMR Can %",  value: "", target: 4.1,  amber: 3.0,  dir: "lower",  notes: "EMR cancellations" },
-  { name: "GTR T3 %",   value: "", target: 84.8, amber: 82.0, dir: "higher", notes: "GTR T3" },
-  { name: "XC T3 %",    value: "", target: 67.8, amber: 69.0, dir: "higher", notes: "XC T3" },
+  { name: "Route T3 %", value: "", target: 78.4, amber: 73.4, dir: "higher", notes: "Route T3 headline" },
+  { name: "EMR T3 %",   value: "", target: 69.9, amber: 64.9, dir: "higher", notes: "EMR T3" },
+  { name: "EMR Can %",  value: "", target: 4.1,  amber: 4.6,  dir: "lower",  notes: "EMR cancellations" },
+  { name: "GTR T3 %",   value: "", target: 84.8, amber: 79.8, dir: "higher", notes: "GTR T3" },
+  { name: "XC T3 %",    value: "", target: 67.8, amber: 62.8, dir: "higher", notes: "XC T3" },
 ];
 
 // ─── SoS-only metric ─────────────────────────────────────────────────────────

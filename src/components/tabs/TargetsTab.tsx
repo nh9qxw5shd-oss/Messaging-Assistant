@@ -95,7 +95,7 @@ export default function TargetsTab() {
     <div className="flex flex-col gap-6">
       <div>
         <h3 className="font-display font-semibold text-base text-ink mb-1">Targets & Thresholds</h3>
-        <p className="text-muted">Edit target/amber/direction here — changes propagate to all performance tables. Value and notes are per-section.</p>
+        <p className="text-muted">Edit target/direction here — changes propagate to all performance tables. The amber threshold is auto-calculated: 5% below target for higher-is-better metrics (Route/EMR/XC/GTR T3), 0.5% above target for lower-is-better metrics (EMR Cancellations). Value and notes are per-section.</p>
       </div>
 
       {/* Supabase target periods */}
