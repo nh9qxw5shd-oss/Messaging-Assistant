@@ -16,6 +16,10 @@ export function buildTactical(_meta: MetaState, tac: TacticalState): string {
   lines.push("https://em-exec-dashboard.vercel.app/");
   lines.push("");
 
+  lines.push("*Upcoming 08:15 Agenda*");
+  lines.push("https://route-call.vercel.app/view");
+  lines.push("");
+
   lines.push("*Operational Status*");
   lines.push(tac.status || "");
   lines.push("");
