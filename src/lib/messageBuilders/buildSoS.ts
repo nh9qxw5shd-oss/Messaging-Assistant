@@ -8,7 +8,7 @@ export function buildSoS(_meta: MetaState, sos: SoSState): string {
   lines.push("");
 
   lines.push("*Upcoming 08:15 Agenda*");
-  lines.push("https://route-call.vercel.app/view");
+  lines.push("https://route-call.netlify.app/view");
   lines.push("");
 
   lines.push("*Operational Status*");

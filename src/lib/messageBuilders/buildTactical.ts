@@ -13,11 +13,11 @@ export function buildTactical(_meta: MetaState, tac: TacticalState): string {
   lines.push("");
 
   lines.push("*Route Resource Dashboard*");
-  lines.push("https://em-exec-dashboard.vercel.app/");
+  lines.push("https://em-exec-dashboard.netlify.app/");
   lines.push("");
 
   lines.push("*Upcoming 08:15 Agenda*");
-  lines.push("https://route-call.vercel.app/view");
+  lines.push("https://route-call.netlify.app/view");
   lines.push("");
 
   lines.push("*Operational Status*");
