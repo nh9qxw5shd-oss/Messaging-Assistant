@@ -7,8 +7,8 @@ export function buildSoS(_meta: MetaState, sos: SoSState): string {
   lines.push(sos.intro || "");
   lines.push("");
 
-  lines.push("*Upcoming 08:15 Agenda*");
-  lines.push("https://route-call.netlify.app/view");
+  lines.push("*Upcoming 08:30 Agenda*");
+  lines.push("https://route-call.derbycontrol.co.uk");
   lines.push("");
 
   lines.push("*Operational Status*");
