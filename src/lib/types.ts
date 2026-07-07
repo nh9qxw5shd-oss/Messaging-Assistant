@@ -142,6 +142,43 @@ export interface SeasonalTemplate {
   created_at: string;
 }
 
+// ─── Message snapshots ────────────────────────────────────────────────────────
+
+export type SnapshotSlot = "0530" | "0900" | "1500" | "2200";
+
+/** Where a Build press lands: the slot, its calendar date, and the date its metrics describe. */
+export interface SnapshotSlotPin {
+  snapshotDate: string;   // YYYY-MM-DD, Europe/London
+  slot: SnapshotSlot;
+  metricsForDate: string; // YYYY-MM-DD; previous day for 0530, snapshotDate otherwise
+}
+
+/** One parsed metric data point stored in ma_message_snapshots.metrics. */
+export interface SnapshotMetric {
+  name: string;                              // matches ma_targets.name exactly
+  value: number | null;                      // null when not entered / not numeric
+  target: number | null;
+  amber: number | null;
+  dir: "higher" | "lower";
+  rag: "green" | "amber" | "red" | "none";
+  notes: string | null;
+}
+
+/** Row shape of ma_message_snapshots, as read back by Insight. */
+export interface MessageSnapshot {
+  id: string;
+  snapshot_date: string;
+  slot: SnapshotSlot;
+  tab: string;
+  message: string;
+  payload: { meta: MetaState; state: unknown };
+  metrics: SnapshotMetric[];
+  metrics_for_date: string;
+  build_count: number;
+  first_built_at: string;
+  last_built_at: string;
+}
+
 // ─── UI types ─────────────────────────────────────────────────────────────────
 
 export type TabKey =

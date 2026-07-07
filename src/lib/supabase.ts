@@ -4,6 +4,7 @@ import type {
   SupabaseTarget,
   SeasonalTemplate,
   TargetMetric,
+  MessageSnapshot,
 } from "./types";
 
 // ─── Client ───────────────────────────────────────────────────────────────────
@@ -111,6 +112,26 @@ export async function saveTargetsForPeriod(
 
   const { error } = await client().from("ma_targets").insert(rows);
   if (error) throw error;
+}
+
+// ─── Message snapshots ────────────────────────────────────────────────────────
+
+/**
+ * Reference implementation of the Insight read contract
+ * (see docs/message-snapshots/SPEC.md): all snapshots whose metrics describe
+ * the given date, in slot order.
+ */
+export async function fetchSnapshotsForMetricsDate(
+  dateISO: string
+): Promise<MessageSnapshot[]> {
+  const { data, error } = await client()
+    .from("ma_message_snapshots")
+    .select("*")
+    .eq("metrics_for_date", dateISO)
+    .order("snapshot_date", { ascending: true })
+    .order("slot", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as MessageSnapshot[];
 }
 
 // ─── Seasonal templates ───────────────────────────────────────────────────────
