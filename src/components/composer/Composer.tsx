@@ -2,6 +2,7 @@
 import { useCallback, useEffect } from "react";
 import { useStore } from "@/lib/store";
 import { buildMessage, buildTeamsHtml } from "@/lib/messageBuilders";
+import { captureMessageSnapshot } from "@/lib/snapshots/capture";
 import BannerPreview from "./BannerPreview";
 import EmojiTray from "./EmojiTray";
 import AutoTextarea from "@/components/shared/AutoTextarea";
@@ -21,6 +22,8 @@ export default function Composer() {
     const msg = buildMessage(activeTab, { meta, sos, str_am, str_pm, tac, safety_msg });
     setBuiltMessage(msg);
     backupNow("build");
+    // Fire-and-forget slot snapshot — never blocks or fails the build.
+    captureMessageSnapshot(activeTab, msg, { meta, sos, str_am, str_pm, tac, safety_msg });
     return msg;
   }, [activeTab, meta, sos, str_am, str_pm, tac, safety_msg, setBuiltMessage, backupNow]);
 
