@@ -2,8 +2,7 @@
 import { useEffect } from "react";
 import { useStore } from "@/lib/store";
 import {
-  fetchActiveTargets,
-  fetchTargetPeriods,
+  autoSelectCurrentPeriod,
   fetchSeasonalTemplates,
   supabase,
 } from "@/lib/supabase";
@@ -19,6 +18,7 @@ export default function Page() {
     hydrate,
     setTargets,
     setTargetPeriods,
+    setActiveTargetPeriodId,
     setSeasonalTemplates,
     setSupabaseReady,
     backupNow,
@@ -44,14 +44,16 @@ export default function Page() {
 
     async function loadSupabase() {
       try {
-        const [activeTargets, periods, templates] = await Promise.all([
-          fetchActiveTargets(),
-          fetchTargetPeriods(),
+        // Auto-select the railway period containing today (Insight railway
+        // calendar) and load its targets alongside the seasonal templates.
+        const [{ period, targets, periods }, templates] = await Promise.all([
+          autoSelectCurrentPeriod(),
           fetchSeasonalTemplates(),
         ]);
 
-        if (activeTargets.length > 0) setTargets(activeTargets);
+        if (targets.length > 0) setTargets(targets);
         setTargetPeriods(periods);
+        setActiveTargetPeriodId(period.id);
         setSeasonalTemplates(templates);
         setSupabaseReady(true);
       } catch (err) {
