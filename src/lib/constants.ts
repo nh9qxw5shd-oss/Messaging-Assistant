@@ -140,6 +140,7 @@ export { DEFAULT_SAFETY_INCIDENT as DEFAULT_SAFETY } from "./safety/constants";
 
 export const LS_SESSION_KEY = "ma-session-v6";
 export const LS_BACKUP_KEY  = "ma-backups-v6";
+export const LS_LIVEPERF_KEY = "ma-liveperf-v1";
 export const BACKUP_KEEP    = 36;
 export const BACKUP_TTL_DAYS = 7;
 export const BACKUP_INTERVAL_MS = 5 * 60 * 1000;
