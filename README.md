@@ -102,7 +102,7 @@ Matching is by metric name (case/whitespace-insensitive), so the names in **Targ
 
 ### How it works
 
-- `src/app/api/performance/route.ts` — server-side proxy. The RDM consumer key never reaches the browser; responses are cached in memory for 60 s so extra tabs/users don't multiply RDM calls.
+- `src/app/api/performance/route.ts` — server-side proxy. The RDM consumer key never reaches the browser; responses are cached in memory for 60 s so extra tabs/users don't multiply RDM calls. The RDM gateway enforces spike arrest (4 requests/second, smoothed), so sources are fetched sequentially with a 350 ms gap and 429s are retried with backoff.
 - `src/lib/rdm/config.ts` — endpoints, TOC codes, metric mapping, poll interval. **This is the only file to touch** if a TOC code, route name, or response field needs correcting.
 - `src/lib/rdm/parse.ts` — locates the T-3 / cancellations figure in a payload by key name (e.g. `t3`, `timeTo3`, `cancellationsPercentage`), tolerant of schema differences. Each value reports the field path it was read from.
 - `src/lib/rdm/livePerfClient.ts` — 2-minute poller, visibility-aware (hidden tabs skip ticks and refresh when re-focused).
