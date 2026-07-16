@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
       error: route.error,
     });
     for (const t of TOC_T3_METRICS) {
-      const agg = aggregateTocT3(routePayload, t.tocMatch);
+      const agg = aggregateTocT3(routePayload, t.tocMatch, t.tocCode);
       metrics.push({
         metric: t.metric,
         value: agg.value,

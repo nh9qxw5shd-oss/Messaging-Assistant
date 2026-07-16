@@ -95,9 +95,9 @@ The tactical Route Performance table is auto-filled from the **NWR Realtime Perf
 |---|---|
 | `Route T3 %` | stop-weighted aggregate of `performanceData/RTOTM/route/East_Midlands` |
 | `EMR T3 %`, `GTR T3 %`, `XC T3 %` | per-operator aggregates of the same route payload |
-| `EMR Can %` | `performanceData/PPM/toc/{tocCode}` (code auto-resolved from the route payload) |
+| `EMR Can %` | `performanceData/PPM/toc/28` |
 
-The route payload is a per-station (stanox) breakdown with per-operator splits and no ready-made totals, so T-3 figures are computed as stop-weighted aggregates (`Σ timeTo3.count / Σ totalStops`). Route names use underscores (`East_Midlands` — spaces cause a backend 500), and TOC codes are numeric business codes (e.g. `88` = Greater Thameslink Railway), resolved at runtime from the payload's operator list rather than hard-coded.
+The route payload is a per-station (stanox) breakdown with per-operator splits and no ready-made totals, so T-3 figures are computed as stop-weighted aggregates (`Σ timeTo3.count / Σ totalStops`). Route names use underscores (`East_Midlands` — spaces cause a backend 500), and TOC codes are numeric business codes: `27` = CrossCountry, `28` = East Midlands Railway, `88` = Thameslink/GTR.
 
 Matching is by metric name (case/whitespace-insensitive), so the names in **Targets & Thresholds** (and `ma_targets` in Supabase) must stay aligned with the mapping in `src/lib/rdm/config.ts`.
 

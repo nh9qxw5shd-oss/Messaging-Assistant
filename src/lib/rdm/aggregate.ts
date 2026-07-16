@@ -83,14 +83,20 @@ export function aggregateRouteT3(payload: unknown): AggregateResult {
   return aggregate(blocks, "route");
 }
 
-/** One operator's T-3 within the route, matched by description or exact code. */
-export function aggregateTocT3(payload: unknown, tocMatch: RegExp): AggregateResult {
+/** One operator's T-3 within the route, matched by exact business code
+ *  (preferred) or description regex (fallback). */
+export function aggregateTocT3(
+  payload: unknown,
+  tocMatch: RegExp,
+  exactCode?: string
+): AggregateResult {
   const blocks: Punctuality[] = [];
   for (const s of stanoxes(payload)) {
     const ops = Array.isArray(s.operators) ? (s.operators as unknown[]) : [];
     for (const op of ops) {
       const { desc, tocCode } = (op ?? {}) as { desc?: unknown; tocCode?: unknown };
       const matches =
+        (exactCode !== undefined && tocCode === exactCode) ||
         (typeof desc === "string" && tocMatch.test(desc)) ||
         (typeof tocCode === "string" && tocMatch.test(tocCode));
       if (!matches) continue;
@@ -98,15 +104,16 @@ export function aggregateTocT3(payload: unknown, tocMatch: RegExp): AggregateRes
       if (p) blocks.push(p);
     }
   }
+  const label = exactCode ? `toc ${exactCode}` : String(tocMatch);
   if (blocks.length === 0) {
     const seen = listOperators(payload).map((o) => `${o.tocCode}=${o.desc}`).join(", ") || "none";
     return {
       value: null,
       detail: null,
-      error: `operator ${tocMatch} not in route payload (operators present: ${seen})`,
+      error: `operator ${label} not in route payload (operators present: ${seen})`,
     };
   }
-  return aggregate(blocks, String(tocMatch));
+  return aggregate(blocks, label);
 }
 
 /** All operators seen anywhere in the payload, unique by tocCode. */

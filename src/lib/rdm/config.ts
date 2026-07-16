@@ -38,12 +38,13 @@ export const ROUTE_SOURCE = {
 export const ROUTE_T3_METRIC = "Route T3 %";
 
 /** Metrics fed by per-operator aggregates of the same route payload. Operators
- *  are matched against the payload's operator descriptions (e.g. tocCode "88"
- *  is described as "Greater Thameslink Railway"). */
-export const TOC_T3_METRICS: { metric: string; tocMatch: RegExp }[] = [
-  { metric: "EMR T3 %", tocMatch: /east\s*midlands/i },
-  { metric: "GTR T3 %", tocMatch: /thameslink/i },
-  { metric: "XC T3 %", tocMatch: /cross\s*country/i },
+ *  are matched by their numeric business code (confirmed: 27 = CrossCountry,
+ *  28 = East Midlands Railway, 88 = Thameslink/GTR), with the description
+ *  regex as a fallback in case a code ever changes. */
+export const TOC_T3_METRICS: { metric: string; tocCode: string; tocMatch: RegExp }[] = [
+  { metric: "EMR T3 %", tocCode: "28", tocMatch: /east\s*midlands/i },
+  { metric: "GTR T3 %", tocCode: "88", tocMatch: /thameslink/i },
+  { metric: "XC T3 %", tocCode: "27", tocMatch: /cross\s*country/i },
 ];
 
 // ─── Additional sources ──────────────────────────────────────────────────────
@@ -86,8 +87,7 @@ export interface RdmSource {
 export const EXTRA_SOURCES: RdmSource[] = [
   {
     id: "emr-cancellations",
-    path: "performanceData/PPM/toc/{tocCode}",
-    tocMatch: /east\s*midlands/i,
+    path: "performanceData/PPM/toc/28", // 28 = East Midlands Railway
     extract: [{ metric: "EMR Can %", kind: "cancellations" }],
   },
 ];
