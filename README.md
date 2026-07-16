@@ -94,10 +94,11 @@ The tactical Route Performance table is auto-filled from the **NWR Realtime Perf
 | Metric name | Source |
 |---|---|
 | `Route T3 %` | stop-weighted aggregate of `performanceData/RTOTM/route/East_Midlands` |
-| `EMR T3 %`, `GTR T3 %`, `XC T3 %` | per-operator aggregates of the same route payload |
-| `EMR Can %` | `performanceData/PPM/toc/28` |
+| `EMR T3 %`, `EMR Can %` | `performanceData/RTOTM/toc/28` (`punctuality.timeTo3.percent` / `reliability.percent`) |
+| `GTR T3 %` | `performanceData/RTOTM/toc/88` (`punctuality.timeTo3.percent`) |
+| `XC T3 %` | `performanceData/RTOTM/toc/27` (`punctuality.timeTo3.percent`) |
 
-The route payload is a per-station (stanox) breakdown with per-operator splits and no ready-made totals, so T-3 figures are computed as stop-weighted aggregates (`Σ timeTo3.count / Σ totalStops`). Route names use underscores (`East_Midlands` — spaces cause a backend 500), and TOC codes are numeric business codes: `27` = CrossCountry, `28` = East Midlands Railway, `88` = Thameslink/GTR.
+TOC figures are whole-TOC totals read straight from the TOC endpoints — aggregating them from the route payload instead would only cover each operator's stops on this route, which reads a point or two off the TOC-wide figure on the live performance pages. The route payload has no ready-made total, so `Route T3 %` is computed as a stop-weighted aggregate (`Σ timeTo3.count / Σ totalStops`). Route names use underscores (`East_Midlands` — spaces cause a backend 500), and TOC codes are numeric business codes: `27` = CrossCountry, `28` = East Midlands Railway, `88` = Thameslink/GTR.
 
 Matching is by metric name (case/whitespace-insensitive), so the names in **Targets & Thresholds** (and `ma_targets` in Supabase) must stay aligned with the mapping in `src/lib/rdm/config.ts`.
 

@@ -100,9 +100,14 @@ export function extractValue(
 ): { value: number | null; path: string | null; error: string | null } {
   if (pick) {
     const v = readPath(payload, pick);
-    return v !== null
-      ? { value: v, path: pick, error: null }
-      : { value: null, path: pick, error: `no numeric value at configured path "${pick}"` };
+    if (v === null) {
+      return { value: null, path: pick, error: `no numeric value at configured path "${pick}" (no live data yet?)` };
+    }
+    // The API uses -1 as a "no data" sentinel (e.g. rollingPercent overnight).
+    if (!isPercentLike(v)) {
+      return { value: null, path: pick, error: `value ${v} at "${pick}" is not a percentage (no live data yet?)` };
+    }
+    return { value: v, path: pick, error: null };
   }
 
   for (const re of KEY_PATTERNS[kind]) {

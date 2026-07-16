@@ -3,18 +3,13 @@ import {
   RDM_DEFAULT_BASE,
   ROUTE_SOURCE,
   ROUTE_T3_METRIC,
-  TOC_T3_METRICS,
   EXTRA_SOURCES,
   SERVER_CACHE_TTL_MS,
   type LiveMetricResult,
   type LivePerfResponse,
 } from "@/lib/rdm/config";
 import { extractValue } from "@/lib/rdm/parse";
-import {
-  aggregateRouteT3,
-  aggregateTocT3,
-  resolveTocCode,
-} from "@/lib/rdm/aggregate";
+import { aggregateRouteT3 } from "@/lib/rdm/aggregate";
 
 // The RDM key must stay server-side; this handler is the only place it is used.
 export const dynamic = "force-dynamic";
@@ -106,17 +101,10 @@ export async function GET(req: NextRequest) {
   const errors: string[] = [];
   const rawPayloads: Record<string, unknown> = {};
 
-  // ── 1. Route payload — feeds all four T-3 metrics from one call ────────────
-  let routePayload: unknown = null;
+  // ── 1. Route payload — feeds the whole-route T-3 aggregate ─────────────────
   try {
-    routePayload = await rdmGet(ROUTE_SOURCE.path, apiKey);
+    const routePayload = await rdmGet(ROUTE_SOURCE.path, apiKey);
     if (raw) rawPayloads[ROUTE_SOURCE.id] = routePayload;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    errors.push(`${ROUTE_SOURCE.id}: ${msg}`);
-  }
-
-  if (routePayload !== null) {
     const route = aggregateRouteT3(routePayload);
     metrics.push({
       metric: ROUTE_T3_METRIC,
@@ -124,42 +112,17 @@ export async function GET(req: NextRequest) {
       fieldPath: route.detail,
       error: route.error,
     });
-    for (const t of TOC_T3_METRICS) {
-      const agg = aggregateTocT3(routePayload, t.tocMatch, t.tocCode);
-      metrics.push({
-        metric: t.metric,
-        value: agg.value,
-        fieldPath: agg.detail,
-        error: agg.error,
-      });
-    }
-  } else {
-    const msg = errors[0] ?? "route payload unavailable";
-    for (const metric of [ROUTE_T3_METRIC, ...TOC_T3_METRICS.map((t) => t.metric)]) {
-      metrics.push({ metric, value: null, fieldPath: null, error: msg });
-    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    errors.push(`${ROUTE_SOURCE.id}: ${msg}`);
+    metrics.push({ metric: ROUTE_T3_METRIC, value: null, fieldPath: null, error: msg });
   }
 
-  // ── 2. Additional sources (cancellations etc.) ─────────────────────────────
+  // ── 2. Whole-TOC sources (T-3 and cancellations per operator) ──────────────
   for (const source of EXTRA_SOURCES) {
     await sleep(SPIKE_GAP_MS);
-
-    let path = source.path;
-    if (source.tocMatch && path.includes("{tocCode}")) {
-      const code = resolveTocCode(routePayload, source.tocMatch);
-      if (!code) {
-        const msg = `cannot resolve TOC code for ${source.tocMatch} from route payload`;
-        errors.push(`${source.id}: ${msg}`);
-        for (const ex of source.extract) {
-          metrics.push({ metric: ex.metric, value: null, fieldPath: null, error: msg });
-        }
-        continue;
-      }
-      path = path.replace("{tocCode}", code);
-    }
-
     try {
-      const payload = await rdmGet(path, apiKey);
+      const payload = await rdmGet(source.path, apiKey);
       if (raw) rawPayloads[source.id] = payload;
       for (const ex of source.extract) {
         const { value, path: fieldPath, error } = extractValue(payload, ex.kind, ex.pick);
