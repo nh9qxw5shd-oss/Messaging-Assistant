@@ -20,12 +20,38 @@ export const POLL_INTERVAL_MS = 2 * 60 * 1000;
  *  multiple users) are served from memory instead of re-hitting RDM. */
 export const SERVER_CACHE_TTL_MS = 60 * 1000;
 
+// ─── Route payload (primary source) ──────────────────────────────────────────
+//
+// One call supplies all four T-3 figures. The payload is a per-station
+// (stanox) breakdown with per-operator splits — no ready-made totals — so
+// route and TOC T-3 are computed as stop-weighted aggregates in aggregate.ts.
+//
+// Route names use underscores: "East_Midlands" (spaces make the backend 500).
+
+export const ROUTE_SOURCE = {
+  id: "route-east-midlands",
+  path: "performanceData/RTOTM/route/East_Midlands",
+};
+
+/** Metric fed by the whole-route aggregate. Metric names must match Targets &
+ *  Thresholds exactly (case/whitespace-insensitive) — same rule as target sync. */
+export const ROUTE_T3_METRIC = "Route T3 %";
+
+/** Metrics fed by per-operator aggregates of the same route payload. Operators
+ *  are matched against the payload's operator descriptions (e.g. tocCode "88"
+ *  is described as "Greater Thameslink Railway"). */
+export const TOC_T3_METRICS: { metric: string; tocMatch: RegExp }[] = [
+  { metric: "EMR T3 %", tocMatch: /east\s*midlands/i },
+  { metric: "GTR T3 %", tocMatch: /thameslink/i },
+  { metric: "XC T3 %", tocMatch: /cross\s*country/i },
+];
+
+// ─── Additional sources ──────────────────────────────────────────────────────
+
 /** What kind of figure to extract from a payload. */
 export type ExtractKind = "t3" | "cancellations";
 
 export interface RdmExtraction {
-  /** Must match the metric name in Targets & Thresholds exactly
-   *  (case/whitespace-insensitive) — same matching rule as target sync. */
   metric: string;
   kind: ExtractKind;
   /**
@@ -41,41 +67,28 @@ export interface RdmExtraction {
 export interface RdmSource {
   /** Short id used in error messages and ?raw=1 output. */
   id: string;
-  /** Path relative to the product base URL. Segments are encoded on request. */
+  /** Path relative to the product base URL. Segments are encoded on request.
+   *  May contain "{tocCode}", resolved via tocMatch. */
   path: string;
+  /** When path contains "{tocCode}": the operator (by description) whose
+   *  numeric code — discovered from the route payload's operator list — fills
+   *  the placeholder. TOC codes are numeric business codes (88 = GTR), so
+   *  they're resolved at runtime rather than hard-coded. */
+  tocMatch?: RegExp;
   extract: RdmExtraction[];
 }
 
-// TOC codes and the route name below are the standard short codes used by NWR
-// performance systems. If a source errors with 404/400, or returns data for
-// the wrong operator, use the reference endpoints to list valid values:
-//   /api/performance?probe=operators
-//   /api/performance?probe=routes
-// then correct the code here.
-export const RDM_SOURCES: RdmSource[] = [
+// Cancellations are not part of the RTOTM data type — they're expected in the
+// PPM data for the operator. The PPM payload schema is unverified (empty
+// overnight when this was wired up); if the value doesn't appear, check
+// /api/performance?raw=1 during service hours and adjust `kind`/`pick`, or
+// switch the path to the RT data type.
+export const EXTRA_SOURCES: RdmSource[] = [
   {
-    id: "route-east-midlands",
-    path: "performanceData/RTOTM/route/East Midlands",
-    extract: [{ metric: "Route T3 %", kind: "t3" }],
-  },
-  {
-    id: "toc-emr",
-    // ALL so a single call carries both the T-3 and cancellations figures.
-    path: "performanceData/ALL/toc/EM",
-    extract: [
-      { metric: "EMR T3 %", kind: "t3" },
-      { metric: "EMR Can %", kind: "cancellations" },
-    ],
-  },
-  {
-    id: "toc-gtr",
-    path: "performanceData/RTOTM/toc/GTR",
-    extract: [{ metric: "GTR T3 %", kind: "t3" }],
-  },
-  {
-    id: "toc-xc",
-    path: "performanceData/RTOTM/toc/XC",
-    extract: [{ metric: "XC T3 %", kind: "t3" }],
+    id: "emr-cancellations",
+    path: "performanceData/PPM/toc/{tocCode}",
+    tocMatch: /east\s*midlands/i,
+    extract: [{ metric: "EMR Can %", kind: "cancellations" }],
   },
 ];
 
@@ -84,7 +97,7 @@ export const RDM_SOURCES: RdmSource[] = [
 export interface LiveMetricResult {
   metric: string;
   value: number | null;
-  /** Dot path of the payload field the value came from (for transparency). */
+  /** Where the value came from: a payload dot path, or an aggregate summary. */
   fieldPath: string | null;
   /** Why the value is null, when it is. */
   error: string | null;
