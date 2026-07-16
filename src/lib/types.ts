@@ -179,6 +179,17 @@ export interface MessageSnapshot {
   last_built_at: string;
 }
 
+// ─── Live performance feed (NWR RDM) ─────────────────────────────────────────
+
+export interface LivePerfState {
+  /** User toggle — persisted in localStorage, polling stops when off. */
+  enabled: boolean;
+  status: "idle" | "loading" | "ok" | "error";
+  lastUpdated: number | null; // epoch ms of last successful fetch
+  /** Error text, or partial-data detail shown alongside an ok status. */
+  message: string | null;
+}
+
 // ─── UI types ─────────────────────────────────────────────────────────────────
 
 export type TabKey =

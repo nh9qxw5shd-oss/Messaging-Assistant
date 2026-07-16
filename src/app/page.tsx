@@ -7,6 +7,7 @@ import {
   supabase,
 } from "@/lib/supabase";
 import { BACKUP_INTERVAL_MS } from "@/lib/constants";
+import { startLivePerf } from "@/lib/rdm/livePerfClient";
 import Header    from "@/components/layout/Header";
 import LeftRail  from "@/components/layout/LeftRail";
 import RightRail from "@/components/layout/RightRail";
@@ -63,6 +64,9 @@ export default function Page() {
 
     loadSupabase();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Live performance polling (every 2 min while open) ──────────────────
+  useEffect(() => startLivePerf(), []);
 
   // ─── Autosave backup every 5 min ─────────────────────────────────────────
   useEffect(() => {

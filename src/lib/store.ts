@@ -12,7 +12,9 @@ import type {
   SessionState,
   TargetPeriod,
   SeasonalTemplate,
+  LivePerfState,
 } from "./types";
+import type { LiveMetricResult } from "./rdm/config";
 import {
   DEFAULT_SOS,
   DEFAULT_STR_AM,
@@ -22,6 +24,7 @@ import {
   DEFAULT_TARGETS,
   LS_SESSION_KEY,
   LS_BACKUP_KEY,
+  LS_LIVEPERF_KEY,
   BACKUP_KEEP,
   BACKUP_TTL_DAYS,
 } from "./constants";
@@ -89,6 +92,7 @@ export interface AppStore {
   toast:        string | null;
   supabaseReady: boolean;
   theme:        "dark" | "light";
+  livePerf:     LivePerfState;
 
   // ─── Meta ─────────────────────────────────────────────────────────────────
   setMeta: (partial: Partial<MetaState>) => void;
@@ -117,6 +121,12 @@ export interface AppStore {
   // ─── Safety ──────────────────────────────────────────────────────────────
   setSafety:   (partial: Partial<SafetyIncidentState>) => void;
   clearSafety: () => void;
+
+  // ─── Live performance feed ───────────────────────────────────────────────
+  setLivePerf:    (partial: Partial<LivePerfState>) => void;
+  toggleLivePerf: () => void;
+  /** Write fetched values into the tactical perf table (matched by metric name). */
+  applyLivePerf:  (results: LiveMetricResult[]) => void;
 
   // ─── Targets ─────────────────────────────────────────────────────────────
   setTargets:    (targets: TargetMetric[]) => void;
@@ -193,6 +203,12 @@ export const useStore = create<AppStore>((set, get) => {
     toast:         null,
     supabaseReady: false,
     theme:         (typeof window !== "undefined" && localStorage.getItem("theme") === "light") ? "light" : "dark",
+    livePerf: {
+      enabled: typeof window === "undefined" || localStorage.getItem(LS_LIVEPERF_KEY) !== "off",
+      status: "idle",
+      lastUpdated: null,
+      message: null,
+    },
 
     // ─── Meta ────────────────────────────────────────────────────────────────
     setMeta: (partial) => {
@@ -283,6 +299,32 @@ export const useStore = create<AppStore>((set, get) => {
     },
     clearSafety: () => {
       set({ safety_msg: { ...DEFAULT_SAFETY } });
+      persist();
+    },
+
+    // ─── Live performance feed ───────────────────────────────────────────────
+    setLivePerf: (partial) => {
+      set((s) => ({ livePerf: { ...s.livePerf, ...partial } }));
+    },
+    toggleLivePerf: () => {
+      const enabled = !get().livePerf.enabled;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LS_LIVEPERF_KEY, enabled ? "on" : "off");
+      }
+      set((s) => ({ livePerf: { ...s.livePerf, enabled } }));
+    },
+    applyLivePerf: (results) => {
+      const norm = (n: string) => (n ?? "").trim().toLowerCase();
+      set((s) => {
+        const perf = s.tac.perf.map((m) => {
+          const hit = results.find(
+            (r) => r.value !== null && norm(r.metric) === norm(m.name)
+          );
+          // Round to 1 dp to match how figures are quoted in messages.
+          return hit ? { ...m, value: Math.round((hit.value as number) * 10) / 10 } : m;
+        });
+        return { tac: { ...s.tac, perf } };
+      });
       persist();
     },
 

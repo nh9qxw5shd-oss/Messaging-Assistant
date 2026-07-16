@@ -4,6 +4,7 @@ import { useStore } from "@/lib/store";
 import AutoTextarea from "@/components/shared/AutoTextarea";
 import StatusSelect from "@/components/shared/StatusSelect";
 import PerfTable from "@/components/shared/PerfTable";
+import LivePerfStatus from "@/components/shared/LivePerfStatus";
 import { LONG_OPS } from "@/lib/constants";
 
 const labelCls = "block font-mono uppercase tracking-widest text-muted mb-1.5";
@@ -57,6 +58,7 @@ export default function TacticalTab() {
       {/* Performance */}
       <div>
         <h4 className="font-sans font-semibold text-ink/80 mb-2">Route Performance</h4>
+        <LivePerfStatus />
         <PerfTable
           metrics={tac.perf}
           locked

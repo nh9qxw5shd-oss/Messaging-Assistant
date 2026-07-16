@@ -35,8 +35,10 @@ cp .env.local.example .env.local
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
 | `NEXT_PUBLIC_APP_URL` | Absolute URL of the deployed app (for Teams banner images) |
+| `RDM_API_KEY` | Rail Data Marketplace consumer key for the live performance feed (server-side only) |
+| `RDM_API_BASE` | Optional override of the RDM data product base URL |
 
-If Supabase variables are omitted the app runs fully offline using built-in defaults.
+If Supabase variables are omitted the app runs fully offline using built-in defaults. If `RDM_API_KEY` is omitted the live performance feed shows an error and performance values are entered manually, as before.
 
 ### 3. Supabase setup
 
@@ -82,6 +84,43 @@ Open [http://localhost:3000](http://localhost:3000).
 2. Import the repo in Vercel
 3. Add environment variables in Vercel project settings
 4. Deploy
+
+---
+
+## Live performance data (NWR Rail Data Marketplace)
+
+The tactical Route Performance table is auto-filled from the **NWR Realtime Performance Data Experience API** (RDM product 1033). While the app is open it polls `/api/performance` every 2 minutes and writes the current figures into the matching metrics by name:
+
+| Metric name | Source |
+|---|---|
+| `Route T3 %` | `performanceData/RTOTM/route/East Midlands` |
+| `EMR T3 %`, `EMR Can %` | `performanceData/ALL/toc/EM` |
+| `GTR T3 %` | `performanceData/RTOTM/toc/GTR` |
+| `XC T3 %` | `performanceData/RTOTM/toc/XC` |
+
+Matching is by metric name (case/whitespace-insensitive), so the names in **Targets & Thresholds** (and `ma_targets` in Supabase) must stay aligned with the mapping in `src/lib/rdm/config.ts`.
+
+### How it works
+
+- `src/app/api/performance/route.ts` — server-side proxy. The RDM consumer key never reaches the browser; responses are cached in memory for 60 s so extra tabs/users don't multiply RDM calls.
+- `src/lib/rdm/config.ts` — endpoints, TOC codes, metric mapping, poll interval. **This is the only file to touch** if a TOC code, route name, or response field needs correcting.
+- `src/lib/rdm/parse.ts` — locates the T-3 / cancellations figure in a payload by key name (e.g. `t3`, `timeTo3`, `cancellationsPercentage`), tolerant of schema differences. Each value reports the field path it was read from.
+- `src/lib/rdm/livePerfClient.ts` — 2-minute poller, visibility-aware (hidden tabs skip ticks and refresh when re-focused).
+- A status bar above the tactical perf table shows live/paused/error state and last-update time, with **Pause** (stop auto-filling, revert to manual entry) and **Refresh** controls. While the feed is live, fetched values overwrite manual edits on each poll.
+
+### Setup
+
+1. Subscribe to the data product on [raildata.org.uk](https://raildata.org.uk) and copy the **Consumer key** from the API access credentials page.
+2. Locally: put it in `.env.local` as `RDM_API_KEY`. Deployed: add `RDM_API_KEY` in Vercel → Project → Settings → Environment Variables and redeploy.
+
+### Verifying / correcting the field mapping
+
+The RDM product's response schema isn't publicly documented, so first time in an environment check what the API actually returns:
+
+- `/api/performance?raw=1` — full raw payloads per source, plus which field path each metric was read from.
+- `/api/performance?probe=operators` (or any relative path) — call the product's reference endpoints to list valid TOC codes / route names.
+
+If a value maps to the wrong field, set an explicit `pick` dot-path on that metric in `src/lib/rdm/config.ts` — no other code changes needed.
 
 ---
 
