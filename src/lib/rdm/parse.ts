@@ -43,7 +43,13 @@ interface Found {
   path: string;
 }
 
-/** Depth-first walk collecting every numeric leaf whose key matches `re`. */
+/** Keys that hold the percentage inside a matched sub-object, in preference
+ *  order — RDM blocks look like { count, percent, rollingPercent, trend }. */
+const PERCENT_SUBKEYS = ["percent", "percentage", "pct", "value"];
+
+/** Depth-first walk collecting every numeric leaf whose key matches `re`.
+ *  A matching key holding an object (e.g. timeTo3: {count, percent}) yields
+ *  its percentage subfield instead. */
 function collectMatches(node: unknown, re: RegExp, path: string, out: Found[]): void {
   if (node === null || typeof node !== "object") return;
   if (Array.isArray(node)) {
@@ -55,9 +61,19 @@ function collectMatches(node: unknown, re: RegExp, path: string, out: Found[]): 
     const n = toNumber(val);
     if (re.test(key) && n !== null && isPercentLike(n)) {
       out.push({ value: n, path: childPath });
-    } else {
-      collectMatches(val, re, childPath, out);
+      continue;
     }
+    if (re.test(key) && val !== null && typeof val === "object" && !Array.isArray(val)) {
+      for (const sub of PERCENT_SUBKEYS) {
+        const p = toNumber((val as Record<string, unknown>)[sub]);
+        if (p !== null && isPercentLike(p)) {
+          out.push({ value: p, path: `${childPath}.${sub}` });
+          break;
+        }
+      }
+      // fall through and recurse too — a deeper exact match may also exist
+    }
+    collectMatches(val, re, childPath, out);
   }
 }
 

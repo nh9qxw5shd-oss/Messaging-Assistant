@@ -93,18 +93,20 @@ The tactical Route Performance table is auto-filled from the **NWR Realtime Perf
 
 | Metric name | Source |
 |---|---|
-| `Route T3 %` | `performanceData/RTOTM/route/East Midlands` |
-| `EMR T3 %`, `EMR Can %` | `performanceData/ALL/toc/EM` |
-| `GTR T3 %` | `performanceData/RTOTM/toc/GTR` |
-| `XC T3 %` | `performanceData/RTOTM/toc/XC` |
+| `Route T3 %` | stop-weighted aggregate of `performanceData/RTOTM/route/East_Midlands` |
+| `EMR T3 %`, `GTR T3 %`, `XC T3 %` | per-operator aggregates of the same route payload |
+| `EMR Can %` | `performanceData/PPM/toc/28` |
+
+The route payload is a per-station (stanox) breakdown with per-operator splits and no ready-made totals, so T-3 figures are computed as stop-weighted aggregates (`Σ timeTo3.count / Σ totalStops`). Route names use underscores (`East_Midlands` — spaces cause a backend 500), and TOC codes are numeric business codes: `27` = CrossCountry, `28` = East Midlands Railway, `88` = Thameslink/GTR.
 
 Matching is by metric name (case/whitespace-insensitive), so the names in **Targets & Thresholds** (and `ma_targets` in Supabase) must stay aligned with the mapping in `src/lib/rdm/config.ts`.
 
 ### How it works
 
 - `src/app/api/performance/route.ts` — server-side proxy. The RDM consumer key never reaches the browser; responses are cached in memory for 60 s so extra tabs/users don't multiply RDM calls. The RDM gateway enforces spike arrest (4 requests/second, smoothed), so sources are fetched sequentially with a 350 ms gap and 429s are retried with backoff.
-- `src/lib/rdm/config.ts` — endpoints, TOC codes, metric mapping, poll interval. **This is the only file to touch** if a TOC code, route name, or response field needs correcting.
-- `src/lib/rdm/parse.ts` — locates the T-3 / cancellations figure in a payload by key name (e.g. `t3`, `timeTo3`, `cancellationsPercentage`), tolerant of schema differences. Each value reports the field path it was read from.
+- `src/lib/rdm/config.ts` — endpoints, operator matching, metric mapping, poll interval. **This is the only file to touch** if a route name, operator, or response field needs correcting.
+- `src/lib/rdm/aggregate.ts` — stop-weighted T-3 aggregation over the route payload's stanox/operator breakdown; each value reports its provenance (e.g. `aggregate: 41/52 stops in T3 across 17 stanoxes`).
+- `src/lib/rdm/parse.ts` — locates the cancellations figure in a payload by key name, tolerant of schema differences (including `{count, percent}` blocks). Each value reports the field path it was read from.
 - `src/lib/rdm/livePerfClient.ts` — 2-minute poller, visibility-aware (hidden tabs skip ticks and refresh when re-focused).
 - A status bar above the tactical perf table shows live/paused/error state and last-update time, with **Pause** (stop auto-filling, revert to manual entry) and **Refresh** controls. While the feed is live, fetched values overwrite manual edits on each poll.
 
