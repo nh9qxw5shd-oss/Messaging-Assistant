@@ -71,6 +71,14 @@ export const TABS: TabKey[] = [
   "targets",
 ];
 
+// Tabs temporarily hidden from the UI. To restore a tab, remove it from
+// this list — all of its components, state and builders remain intact.
+export const HIDDEN_TABS: TabKey[] = ["strategic_am", "strategic_pm"];
+
+export const VISIBLE_TABS: TabKey[] = TABS.filter(
+  (tab) => !HIDDEN_TABS.includes(tab)
+);
+
 // ─── Banner file paths (relative to public/) ─────────────────────────────────
 
 export const BANNER_FILES: Partial<Record<TabKey, string>> = {

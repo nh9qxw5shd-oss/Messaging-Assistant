@@ -1,6 +1,6 @@
 "use client";
 import { useStore } from "@/lib/store";
-import { TABS, TAB_LABELS } from "@/lib/constants";
+import { VISIBLE_TABS, TAB_LABELS } from "@/lib/constants";
 import type { TabKey } from "@/lib/types";
 import SoSTab          from "@/components/tabs/SoSTab";
 import StrategicAMTab  from "@/components/tabs/StrategicAMTab";
@@ -26,7 +26,7 @@ export default function RightRail() {
     <div className="flex flex-col gap-0 min-h-0">
       {/* Tab nav */}
       <nav className="flex flex-wrap gap-1.5 px-4 pt-4 pb-0 border-b border-grid/60">
-        {TABS.map((tab) => {
+        {VISIBLE_TABS.map((tab) => {
           const active = tab === activeTab;
           return (
             <button
