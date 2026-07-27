@@ -198,4 +198,5 @@ export type TabKey =
   | "strategic_pm"
   | "tactical"
   | "safety_msg"
+  | "incident"
   | "targets";

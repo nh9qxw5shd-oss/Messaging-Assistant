@@ -64,7 +64,8 @@ export default function Composer() {
   }
 
   const hasMessage = builtMessage.trim().length > 0;
-  const isConfigTab = activeTab === "targets";
+  // Targets is config; the incident tab carries its own composer in-panel.
+  const isConfigTab = activeTab === "targets" || activeTab === "incident";
 
   return (
     <div className="flex flex-col gap-4">
@@ -84,7 +85,13 @@ export default function Composer() {
         value={builtMessage}
         onChange={() => {}}
         readOnly
-        placeholder={isConfigTab ? "Select a message tab to build." : "Built message appears here…"}
+        placeholder={
+          activeTab === "incident"
+            ? "Incident messages build and copy inside the tab."
+            : isConfigTab
+            ? "Select a message tab to build."
+            : "Built message appears here…"
+        }
         minRows={10}
         className="font-mono leading-relaxed min-h-[200px] max-h-[45vh] overflow-y-auto"
       />
