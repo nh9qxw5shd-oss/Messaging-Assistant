@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useIncidentStore } from "@/lib/incident/store";
 import {
-  SERVICE_GROUPS,
+  OPERATORS,
   RESPONSE_KINDS,
   COMMAND_ROLE_PRESETS,
   uid,
@@ -71,9 +71,9 @@ export function Chip({
 const removeBtn =
   "px-2 rounded text-muted/60 hover:text-warn border border-transparent hover:border-warn/30 transition-colors";
 
-// ─── Service groups ───────────────────────────────────────────────────────────
+// ─── Operators impacted ───────────────────────────────────────────────────────
 
-export function ServiceGroupPicker({ inc }: { inc: IncidentState }) {
+export function OperatorPicker({ inc }: { inc: IncidentState }) {
   const { patch } = useIncidentStore();
   const [custom, setCustom] = useState("");
 
@@ -92,12 +92,12 @@ export function ServiceGroupPicker({ inc }: { inc: IncidentState }) {
     setCustom("");
   };
 
-  const extras = inc.serviceGroups.filter((g) => !(SERVICE_GROUPS as readonly string[]).includes(g));
+  const extras = inc.serviceGroups.filter((g) => !(OPERATORS as readonly string[]).includes(g));
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-1.5">
-        {SERVICE_GROUPS.map((g) => (
+        {OPERATORS.map((g) => (
           <Chip key={g} selected={inc.serviceGroups.includes(g)} onClick={() => toggle(g)}>
             {g}
           </Chip>
@@ -114,7 +114,7 @@ export function ServiceGroupPicker({ inc }: { inc: IncidentState }) {
           value={custom}
           onChange={(e) => setCustom(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addCustom()}
-          placeholder="Add other service group…"
+          placeholder="Add other operator…"
           className={inp}
         />
         <button
@@ -137,43 +137,38 @@ export function StrandedEditor({ inc }: { inc: IncidentState }) {
   const update = (id: string, partial: Partial<IncidentState["stranded"][number]>) =>
     patch({ stranded: inc.stranded.map((t) => (t.id === id ? { ...t, ...partial } : t)) });
 
-  const markCleared = (t: IncidentState["stranded"][number]) => {
-    if (!t.cleared && t.headcode.trim()) {
-      // One-click resolution line, editable afterwards in the plan field.
-      const where = t.location.trim();
-      update(t.id, {
-        cleared: true,
-        plan: t.plan.trim() || `safely returned${where ? ` to ${where}` : ""}`,
-      });
-    } else {
-      update(t.id, { cleared: !t.cleared });
-    }
-  };
+  // Ticking strikes the train through in the message with a "risk resolved"
+  // note — the entry stays visible rather than disappearing.
+  const struck = "line-through text-muted/60";
 
   return (
     <div className="flex flex-col gap-2">
       {inc.stranded.map((t) => (
         <div key={t.id} className="flex gap-1.5 items-center">
           <input
-            className={clsx(inpBase, "w-20 flex-none font-mono")}
+            className={clsx(inpBase, "w-20 flex-none font-mono", t.cleared && struck)}
             value={t.headcode}
             onChange={(e) => update(t.id, { headcode: e.target.value.toUpperCase() })}
             placeholder="2O22"
             maxLength={4}
           />
           <input
-            className={clsx(inpBase, "w-40 flex-none")}
+            className={clsx(inpBase, "w-40 flex-none", t.cleared && struck)}
             value={t.location}
             onChange={(e) => update(t.id, { location: e.target.value })}
             placeholder="Stood Bottesford Station"
           />
           <input
-            className={inp}
+            className={clsx(inp, t.cleared && struck)}
             value={t.plan}
             onChange={(e) => update(t.id, { plan: e.target.value })}
             placeholder="plan / status"
           />
-          <Chip selected={t.cleared} onClick={() => markCleared(t)} title="Mark cleared">
+          <Chip
+            selected={t.cleared}
+            onClick={() => update(t.id, { cleared: !t.cleared })}
+            title="Mark risk resolved — strikes the train through in the message"
+          >
             ✓
           </Chip>
           <button

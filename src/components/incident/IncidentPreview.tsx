@@ -100,9 +100,9 @@ export default function IncidentPreview({ inc }: { inc: IncidentState }) {
         </div>
       </div>
 
-      {/* Banner preview */}
+      {/* Banner preview — flex-none so an expanded timeline can't crush it */}
       {banner && (
-        <div className="rounded overflow-hidden border border-grid/60">
+        <div className="rounded overflow-hidden border border-grid/60 flex-none">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={banner.path} alt={banner.label} className="w-full h-auto block" />
         </div>
@@ -111,8 +111,8 @@ export default function IncidentPreview({ inc }: { inc: IncidentState }) {
       {/* Message preview */}
       <pre
         className={clsx(
-          "flex-1 rounded border p-4 text-sm font-mono whitespace-pre-wrap break-words leading-relaxed",
-          "bg-panel2 border-grid text-ink overflow-y-auto min-h-[200px]"
+          "flex-none rounded border p-4 text-sm font-mono whitespace-pre-wrap break-words leading-relaxed",
+          "bg-panel2 border-grid text-ink min-h-[200px]"
         )}
       >
         {rendered || (
@@ -131,7 +131,7 @@ export default function IncidentPreview({ inc }: { inc: IncidentState }) {
           {showTimeline ? "▾" : "▸"} Sent timeline ({inc.sent.length})
         </button>
         {showTimeline && (
-          <div className="flex flex-col gap-2 mt-2 max-h-[30vh] overflow-y-auto">
+          <div className="flex flex-col gap-2 mt-2">
             {inc.sent.length === 0 && (
               <div className="text-sm text-muted/50 italic">Nothing sent yet.</div>
             )}
@@ -149,7 +149,7 @@ export default function IncidentPreview({ inc }: { inc: IncidentState }) {
                     Re-copy
                   </button>
                 </div>
-                <pre className="text-xs font-mono whitespace-pre-wrap break-words text-muted max-h-24 overflow-y-auto">
+                <pre className="text-xs font-mono whitespace-pre-wrap break-words text-muted">
                   {m.text}
                 </pre>
               </div>

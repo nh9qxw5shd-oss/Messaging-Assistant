@@ -47,18 +47,12 @@ export const PHASE_ORDER: IncidentPhase[] = [
 
 // ─── Picklists ────────────────────────────────────────────────────────────────
 
-// Needs validating against current service-group definitions (SPEC open Q1) —
-// free-text additions cover the gaps meanwhile.
-export const SERVICE_GROUPS = [
-  "East Midlands Inter City",
-  "East Midlands Regional",
-  "East Midlands Local",
-  "Derby / Nottingham / Leicester",
-  "Lincoln / Sleaford / Skegness",
-  "Bedford South",
-  "GTR – Thameslink North",
-  "CrossCountry",
-  "Northern Inter Urban",
+export const OPERATORS = [
+  "EMR",
+  "GTR",
+  "Cross Country",
+  "Northern Trains",
+  "LNER",
   "Freight",
 ] as const;
 

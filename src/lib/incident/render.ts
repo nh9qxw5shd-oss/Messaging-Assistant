@@ -23,17 +23,21 @@ function titleLine(inc: IncidentState): string {
   return inc.title.trim() ? `${emoji} *${inc.title.trim()}*` : emoji;
 }
 
-function serviceGroupsBlock(inc: IncidentState): string | null {
-  return section("Service Groups affected", inc.serviceGroups.join("\n"));
+function operatorsBlock(inc: IncidentState): string | null {
+  return section("Operators Impacted", inc.serviceGroups.join("\n"));
 }
 
 function strandedBlock(inc: IncidentState): string | null {
-  // Only rendered once trains have been entered; cleared trains keep their
-  // plan line ("safely returned to…") until removed, matching corpus practice.
+  // Cleared trains stay listed, struck through (WhatsApp ~tilde~ formatting)
+  // with a "risk resolved" note, so readers see the risk was closed out.
   if (inc.stranded.length === 0) return null;
-  const active = inc.stranded.filter((t) => !t.cleared || t.plan.trim());
-  const lines = active.map((t) => {
+  const lines = inc.stranded.map((t) => {
     const head = [t.headcode.trim(), t.location.trim()].filter(Boolean).join(" ");
+    if (!head && !t.plan.trim()) return "";
+    if (t.cleared) {
+      const struck = t.plan.trim() ? `${head} – ${t.plan.trim()}` : head;
+      return `~${struck}~ – risk resolved`;
+    }
     return t.plan.trim() ? `${head} – ${t.plan.trim()}` : head;
   }).filter(Boolean);
   return section("Stranded Trains", lines.length ? lines.join("\n") : "None");
@@ -69,7 +73,11 @@ function dsfLine(inc: IncidentState): string {
   const { trains, minutes, cancellations } = inc.dsf;
   if (!trains.trim() || !minutes.trim()) return "";
   const base = `DSF ${trains.trim()} x ${minutes.trim()}`;
-  return cancellations.trim() ? `${base} with ${cancellations.trim()}` : base;
+  const c = cancellations.trim();
+  if (!c) return base;
+  // "2 full" → "with 2 full cancellations"; text already containing the word
+  // ("3 part cancellations") passes through untouched.
+  return /cancel/i.test(c) ? `${base} with ${c}` : `${base} with ${c} cancellations`;
 }
 
 function delayStatusBlock(inc: IncidentState): string | null {
@@ -85,7 +93,7 @@ function renderHolding(inc: IncidentState): string {
   return joinBlocks([
     header,
     inc.draftNarrative,
-    serviceGroupsBlock(inc),
+    operatorsBlock(inc),
     strandedBlock(inc),
     "Details being established and update to follow.",
   ]);
@@ -95,7 +103,7 @@ function renderInitial(inc: IncidentState): string {
   return joinBlocks([
     titleLine(inc),
     section("Headline", inc.headline),
-    serviceGroupsBlock(inc),
+    operatorsBlock(inc),
     strandedBlock(inc),
     section("Train Service", inc.trainService),
     section("Customer Impact", inc.customerImpact),
@@ -112,7 +120,7 @@ function renderUpdate(inc: IncidentState): string {
     titleLine(inc),
     `*Update ${n}*`,
     inc.draftNarrative,
-    serviceGroupsBlock(inc),
+    operatorsBlock(inc),
     strandedBlock(inc),
     section("Train Service", inc.trainService),
     section("Customer Impact", inc.customerImpact),

@@ -14,7 +14,7 @@ import {
   Section,
   Field,
   Chip,
-  ServiceGroupPicker,
+  OperatorPicker,
   StrandedEditor,
   ResponseEditor,
   CommandEditor,
@@ -92,25 +92,33 @@ function IncidentRail() {
 
 function PhaseStepper({ inc }: { inc: IncidentState }) {
   const { setPhase } = useIncidentStore();
+  // Stages that have had a message copied out show green, marking progress.
+  const sentPhases = new Set(inc.sent.map((m) => m.phase));
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {PHASE_ORDER.map((p, idx) => (
-        <div key={p} className="flex items-center gap-1">
-          {idx > 0 && <span className="text-muted/30">→</span>}
-          <button
-            onClick={() => setPhase(p)}
-            className={clsx(
-              "px-3 py-1.5 rounded text-sm font-mono border transition-colors",
-              inc.phase === p
-                ? "bg-accent/15 border-accent text-accent"
-                : "bg-panel2 border-grid text-muted hover:text-ink hover:border-accent/50"
-            )}
-          >
-            {PHASE_LABELS[p]}
-            {p === "update" && inc.updateCount > 0 ? ` (${inc.updateCount} sent)` : ""}
-          </button>
-        </div>
-      ))}
+      {PHASE_ORDER.map((p, idx) => {
+        const active = inc.phase === p;
+        const done = sentPhases.has(p);
+        return (
+          <div key={p} className="flex items-center gap-1">
+            {idx > 0 && <span className="text-muted/30">→</span>}
+            <button
+              onClick={() => setPhase(p)}
+              className={clsx(
+                "px-3 py-1.5 rounded text-sm font-mono border transition-colors",
+                active && "bg-accent/15 border-accent text-accent",
+                !active && done && "bg-good/15 border-good text-good hover:border-good",
+                !active && !done &&
+                  "bg-panel2 border-grid text-muted hover:text-ink hover:border-accent/50"
+              )}
+            >
+              {done ? "✓ " : ""}
+              {PHASE_LABELS[p]}
+              {p === "update" && inc.updateCount > 0 ? ` (${inc.updateCount} sent)` : ""}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -211,7 +219,7 @@ function IdentitySection({ inc }: { inc: IncidentState }) {
           onClick={() => {
             if (window.confirm("Close this incident? It moves to the closed list.")) closeIncident();
           }}
-          className="px-3 py-1.5 rounded text-sm border border-grid text-muted hover:text-warn hover:border-warn/40 transition-colors"
+          className="px-3 py-1.5 rounded text-sm font-semibold bg-bad text-white border border-bad hover:opacity-85 transition-opacity"
         >
           Close incident
         </button>
@@ -263,7 +271,7 @@ function PhaseForm({ inc }: { inc: IncidentState }) {
           {narrative("What's been reported", "Report received from … Details being established.")}
           {!brief && (
             <>
-              <Section title="Service groups affected"><ServiceGroupPicker inc={inc} /></Section>
+              <Section title="Operators impacted"><OperatorPicker inc={inc} /></Section>
               <Section title="Stranded trains"><StrandedEditor inc={inc} /></Section>
             </>
           )}
@@ -282,7 +290,7 @@ function PhaseForm({ inc }: { inc: IncidentState }) {
               minRows={3}
             />
           </Section>
-          <Section title="Service groups affected"><ServiceGroupPicker inc={inc} /></Section>
+          <Section title="Operators impacted"><OperatorPicker inc={inc} /></Section>
           <Section title="Stranded trains"><StrandedEditor inc={inc} /></Section>
           <Section title="Train service">
             <AutoTextarea value={inc.trainService} onChange={(v) => patch({ trainService: v })} placeholder="How services are running around the failure." minRows={2} />
@@ -328,7 +336,7 @@ function PhaseForm({ inc }: { inc: IncidentState }) {
                 </div>
               </Section>
               <Section title="Delay status"><DsfFields inc={inc} /></Section>
-              <Section title="Service groups affected"><ServiceGroupPicker inc={inc} /></Section>
+              <Section title="Operators impacted"><OperatorPicker inc={inc} /></Section>
               <Section title="Stranded trains"><StrandedEditor inc={inc} /></Section>
               <Section title="Train service">
                 <AutoTextarea value={inc.trainService} onChange={(v) => patch({ trainService: v })} minRows={2} placeholder="" />
