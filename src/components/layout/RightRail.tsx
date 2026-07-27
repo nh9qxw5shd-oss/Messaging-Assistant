@@ -7,6 +7,7 @@ import StrategicAMTab  from "@/components/tabs/StrategicAMTab";
 import StrategicPMTab  from "@/components/tabs/StrategicPMTab";
 import TacticalTab     from "@/components/tabs/TacticalTab";
 import SafetyTab       from "@/components/tabs/SafetyTab";
+import IncidentTab     from "@/components/tabs/IncidentTab";
 import TargetsTab      from "@/components/tabs/TargetsTab";
 import clsx from "clsx";
 
@@ -16,6 +17,7 @@ const TAB_PANELS: Record<TabKey, React.ReactNode> = {
   strategic_pm: <StrategicPMTab />,
   tactical:     <TacticalTab />,
   safety_msg:   <SafetyTab />,
+  incident:     <IncidentTab />,
   targets:      <TargetsTab />,
 };
 

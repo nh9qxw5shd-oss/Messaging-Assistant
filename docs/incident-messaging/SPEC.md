@@ -25,7 +25,7 @@ Incidents in the corpus follow a consistent cycle, though not every incident use
 Two message *registers* coexist:
 
 - **Long-form** — full sectioned template (the shape the old tool generates). Used for genuinely significant incidents.
-- **Short-form** — one emoji + `*Title*` + a 1–4 sentence narrative. This is the *majority* of update traffic. Many incidents run entirely short-form, with `*ALL UPDATES VIA TYRELL*` (~211 references) marking that detail lives elsewhere.
+- **Short-form** — one emoji + `*Title*` + a 1–4 sentence narrative. This is the *majority* of update traffic; many incidents run entirely short-form, with detailed messaging handled through other channels.
 
 **Design consequence**: the new section must make short-form as fast as long-form — the old tool only does long-form, which is a key reason it feels clunky.
 
@@ -100,7 +100,7 @@ Single-page static site (1.7 MB HTML, all inline JS + base64 banners). Tabs: Ini
 ## 3. Design principles for the new section
 
 1. **Incident as a persistent object, not a form.** One `IncidentState` record holds identity (title, severity, route/off-route, service groups) and living state (status emoji, response roster, command structure, stranded trains, plans, DSF). Every phase's message is *rendered from the record*; the operator edits the delta, not the message.
-2. **Two registers, one record.** Every phase can render **Full** (sectioned template + banner) or **Brief** (emoji + title + narrative, no banner). Default: Full for Initial/NWR/Recovery, Brief for updates — matching corpus behaviour. A `Detail via Tyrell` toggle appends the standard line and biases subsequent defaults to Brief.
+2. **Two registers, one record.** Every phase can render **Full** (sectioned template + banner) or **Brief** (emoji + title + narrative, no banner). Default: Full for Initial/NWR/Recovery, Brief for updates — matching corpus behaviour.
 3. **Sections are composable blocks.** The renderer walks an ordered block list; each block self-suppresses when empty (same pattern as the existing message builders). Per-phase defaults from §1.3, but any block can be toggled on/off per message.
 4. **State steps forward automatically.** Sending a message advances the machine: update numbers auto-increment; resources with a reached ETA prompt "mark on site?"; choosing the NWR phase pre-fills `Normal working resumed at {now}` and flips status to 🟢; cleared stranded trains drop off with a "safely returned/moved" line available.
 5. **Multiple concurrent incidents.** An incident list (localStorage, same pattern as `ma-session-v5`); each incident owns its own thread history. Closing an incident archives it.
@@ -181,7 +181,6 @@ Details being established and update to follow.
 {per role: role label, holder}
 [*Prioritised Plan*\n{numbered/lined priorities}]
 [*Milestone Plan*\n{milestones or "To be established…"}]
-[Detailed updates via Tyrell]
 ```
 
 ### 6.3 Update (Full)
@@ -270,7 +269,6 @@ export interface IncidentState {
   status: StatusEmoji;
   offRoute: null | "kent" | "sussex" | "york" | "rugby";
   title: string;                    // "{What} {Where}", fixed at creation
-  tyrellDetail: boolean;            // appends "Detailed updates via Tyrell", biases Brief
   serviceGroups: string[];          // picklist + free text
   headline: string;
   trainService: string;
@@ -321,6 +319,6 @@ New tab `incident` in the existing tab bar (`TabKey` + `VISIBLE_TABS`), reusing 
 ## Open questions
 
 1. Service-group picklist: the old tool's list (Derby/Nottingham/Leicester, Lincoln/Sleaford/Skegness, Bedford South, …) needs validating against current service-group definitions before hard-coding.
-2. Should Brief updates for Tyrell-managed incidents auto-suppress the structured blocks entirely (corpus says yes), or keep DSF visible?
+2. Should Brief updates auto-suppress all structured blocks (corpus says yes), or keep DSF visible?
 3. Do NWR + Service Recovery ever need Black-severity banner variants (the old tool has none — NWR/recovery banners are severity-agnostic)?
 4. Retention: how long should closed incidents stay in the archive list before pruning localStorage?

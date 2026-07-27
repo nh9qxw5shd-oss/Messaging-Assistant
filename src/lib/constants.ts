@@ -59,6 +59,7 @@ export const TAB_LABELS: Record<TabKey, string> = {
   strategic_pm: "Strategic PM 20:00",
   tactical:     "Tactical 09 / 15 / 22",
   safety_msg:   "Safety Message",
+  incident:     "Incident Messaging",
   targets:      "Targets & Thresholds",
 };
 
@@ -68,6 +69,7 @@ export const TABS: TabKey[] = [
   "strategic_pm",
   "tactical",
   "safety_msg",
+  "incident",
   "targets",
 ];
 
