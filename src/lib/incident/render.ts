@@ -1,6 +1,5 @@
 import type { IncidentState } from "./types";
 import {
-  STATUS_EMOJI,
   STRATEGIC_PRIORITY_GROUPS,
   normaliseTime,
   resolveBanner,
@@ -19,8 +18,7 @@ function joinBlocks(blocks: (string | null)[]): string {
 }
 
 function titleLine(inc: IncidentState): string {
-  const emoji = STATUS_EMOJI[inc.status];
-  return inc.title.trim() ? `${emoji} *${inc.title.trim()}*` : emoji;
+  return inc.title.trim() ? `*${inc.title.trim()}*` : "";
 }
 
 function operatorsBlock(inc: IncidentState): string | null {
@@ -151,10 +149,9 @@ function renderNwr(inc: IncidentState): string {
 }
 
 function renderRecovery(inc: IncidentState): string {
-  const emoji = STATUS_EMOJI[inc.status];
   const title = inc.title.trim()
-    ? `${emoji} *${inc.title.trim()}* – *Service Recovery*`
-    : `${emoji} *Service Recovery*`;
+    ? `*${inc.title.trim()}* – *Service Recovery*`
+    : `*Service Recovery*`;
   const review = inc.recovery.nextReview.trim()
     ? `Time of next service recovery review: ${normaliseTime(inc.recovery.nextReview)}`
     : null;

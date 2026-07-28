@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { useIncidentStore } from "@/lib/incident/store";
 import {
-  STATUS_EMOJI,
   PHASE_LABELS,
   PHASE_ORDER,
   STRATEGIC_PRIORITY_GROUPS,
@@ -44,7 +43,7 @@ function IncidentRail() {
               : "bg-panel2 border-grid text-muted hover:border-accent/50 hover:text-ink"
           )}
         >
-          {STATUS_EMOJI[i.status]} {i.title.trim() || "New incident"}
+          {i.title.trim() || "New incident"}
         </button>
       ))}
       <button
