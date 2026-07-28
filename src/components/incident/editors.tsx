@@ -144,7 +144,7 @@ export function StrandedEditor({ inc }: { inc: IncidentState }) {
   return (
     <div className="flex flex-col gap-2">
       {inc.stranded.map((t) => (
-        <div key={t.id} className="flex gap-1.5 items-center">
+        <div key={t.id} className="flex flex-wrap gap-1.5 items-center">
           <input
             className={clsx(inpBase, "w-20 flex-none font-mono", t.cleared && struck)}
             value={t.headcode}
@@ -159,7 +159,7 @@ export function StrandedEditor({ inc }: { inc: IncidentState }) {
             placeholder="Stood Bottesford Station"
           />
           <input
-            className={clsx(inp, t.cleared && struck)}
+            className={clsx(inp, "flex-1 min-w-[140px]", t.cleared && struck)}
             value={t.plan}
             onChange={(e) => update(t.id, { plan: e.target.value })}
             placeholder="plan / status"
@@ -224,9 +224,9 @@ export function ResponseEditor({ inc }: { inc: IncidentState }) {
         ))}
       </div>
       {inc.response.map((r) => (
-        <div key={r.id} className="flex gap-1.5 items-center">
+        <div key={r.id} className="flex flex-wrap gap-1.5 items-center">
           <input
-            className={inp}
+            className={clsx(inp, "flex-1 min-w-[160px]")}
             value={r.label}
             onChange={(e) => update(r.id, { label: e.target.value })}
             placeholder={r.kind === "Other" ? "e.g. Richmond recovery" : `e.g. Nottingham ${r.kind}`}
@@ -274,7 +274,7 @@ export function CommandEditor({ inc }: { inc: IncidentState }) {
   return (
     <div className="flex flex-col gap-2">
       {inc.command.map((c) => (
-        <div key={c.id} className="flex gap-1.5 items-center">
+        <div key={c.id} className="flex flex-wrap gap-1.5 items-center">
           <input
             className={clsx(inpBase, "w-56 flex-none")}
             value={c.role}
@@ -282,7 +282,7 @@ export function CommandEditor({ inc }: { inc: IncidentState }) {
             readOnly={c.mandatory}
           />
           <input
-            className={inp}
+            className={clsx(inp, "flex-1 min-w-[140px]")}
             value={c.holder}
             onChange={(e) => update(c.id, { holder: e.target.value })}
             placeholder={c.mandatory ? "required" : "name / team"}

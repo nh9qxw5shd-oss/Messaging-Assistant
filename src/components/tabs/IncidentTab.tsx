@@ -3,13 +3,12 @@ import { useEffect } from "react";
 import { useIncidentStore } from "@/lib/incident/store";
 import {
   STATUS_EMOJI,
-  STATUS_LABELS,
   PHASE_LABELS,
   PHASE_ORDER,
   STRATEGIC_PRIORITY_GROUPS,
   INCIDENT_BANNERS,
 } from "@/lib/incident/constants";
-import type { IncidentState, IncidentPhase, StatusEmoji, OffRoute } from "@/lib/incident/types";
+import type { IncidentState, OffRoute } from "@/lib/incident/types";
 import {
   Section,
   Field,
@@ -21,7 +20,6 @@ import {
   inp,
   sel,
 } from "@/components/incident/editors";
-import IncidentPreview from "@/components/incident/IncidentPreview";
 import AutoTextarea from "@/components/shared/AutoTextarea";
 import clsx from "clsx";
 
@@ -137,7 +135,7 @@ function IdentitySection({ inc }: { inc: IncidentState }) {
           placeholder="e.g. Car on the Line Orston"
         />
       </Field>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <Field label="Severity (banner)">
           <div className="grid grid-cols-2 gap-1.5">
             {(["red", "black"] as const).map((s) => (
@@ -158,27 +156,6 @@ function IdentitySection({ inc }: { inc: IncidentState }) {
             ))}
           </div>
         </Field>
-        <Field label="Status">
-          <div className="grid grid-cols-4 gap-1.5">
-            {(Object.keys(STATUS_EMOJI) as StatusEmoji[]).map((s) => (
-              <button
-                key={s}
-                onClick={() => patch({ status: s })}
-                title={STATUS_LABELS[s]}
-                className={clsx(
-                  "py-2 rounded text-base border transition-colors",
-                  inc.status === s
-                    ? "bg-accent/15 border-accent"
-                    : "bg-panel2 border-grid hover:border-accent/50"
-                )}
-              >
-                {STATUS_EMOJI[s]}
-              </button>
-            ))}
-          </div>
-        </Field>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
         <Field label="Location">
           <select
             className={sel}
@@ -193,20 +170,20 @@ function IdentitySection({ inc }: { inc: IncidentState }) {
             <option value="rugby">Off-route — Rugby</option>
           </select>
         </Field>
-        <Field label="Banner override">
-          <select
-            className={sel}
-            value={inc.bannerOverride}
-            onChange={(e) => patch({ bannerOverride: e.target.value })}
-          >
-            <option value="">Automatic (from phase)</option>
-            <option value="none">No banner</option>
-            {INCIDENT_BANNERS.map((b) => (
-              <option key={b.id} value={b.id}>{b.label}</option>
-            ))}
-          </select>
-        </Field>
       </div>
+      <Field label="Banner override">
+        <select
+          className={sel}
+          value={inc.bannerOverride}
+          onChange={(e) => patch({ bannerOverride: e.target.value })}
+        >
+          <option value="">Automatic (from phase)</option>
+          <option value="none">No banner</option>
+          {INCIDENT_BANNERS.map((b) => (
+            <option key={b.id} value={b.id}>{b.label}</option>
+          ))}
+        </select>
+      </Field>
       <div className="flex gap-2 items-center">
         <span className="font-mono uppercase tracking-widest text-muted text-xs">Register</span>
         {(["full", "brief"] as const).map((r) => (
@@ -473,14 +450,10 @@ export default function IncidentTab() {
       {inc && inc.phase !== "closed" && (
         <>
           <PhaseStepper inc={inc} />
-          <div className="flex gap-4 min-h-0 flex-1">
-            {/* Left: form */}
-            <div className="flex flex-col gap-4 w-[460px] flex-shrink-0 overflow-y-auto pr-1">
-              <IdentitySection inc={inc} />
-              <PhaseForm inc={inc} />
-            </div>
-            {/* Right: preview + timeline */}
-            <IncidentPreview inc={inc} />
+          {/* Preview + copy live in the left rail, like every other tab. */}
+          <div className="flex flex-col gap-4 w-full max-w-3xl">
+            <IdentitySection inc={inc} />
+            <PhaseForm inc={inc} />
           </div>
         </>
       )}

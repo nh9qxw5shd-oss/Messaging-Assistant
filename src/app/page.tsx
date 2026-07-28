@@ -82,14 +82,15 @@ export default function Page() {
   return (
     <>
       <Header />
-      <main className="flex gap-4 p-4 items-start min-h-[calc(100vh-57px)]">
+      {/* Stacks on small screens (content first, composer below); side-by-side from lg up. */}
+      <main className="flex flex-col lg:flex-row gap-4 p-3 lg:p-4 items-start min-h-[calc(100vh-57px)]">
         {/* Left rail — fixed width composer */}
-        <div className="w-80 flex-shrink-0">
+        <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1">
           <LeftRail />
         </div>
 
         {/* Right rail — tabs */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 w-full order-1 lg:order-2">
           <Card noPad className="min-h-[calc(100vh-89px)]">
             <RightRail />
           </Card>
