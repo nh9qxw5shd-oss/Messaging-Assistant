@@ -106,11 +106,9 @@ export const useIncidentStore = create<IncidentStore>((set, get) => {
       if (phase === "initial" && inc.phase === "holding") {
         partial.draftNarrative = inc.draftNarrative;
       }
-      if (phase === "nwr") {
-        partial.status = "green";
-        if (!inc.nwr.time) partial.nwr = { ...inc.nwr, time: nowLondon() };
+      if (phase === "nwr" && !inc.nwr.time) {
+        partial.nwr = { ...inc.nwr, time: nowLondon() };
       }
-      if (phase === "recovery") partial.status = "green";
       patchIncident(inc.id, partial);
     },
 

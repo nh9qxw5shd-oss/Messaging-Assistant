@@ -153,9 +153,9 @@ export default function SafetyTab() {
   }
 
   return (
-    <div className="flex gap-4 min-h-0" style={{ minHeight: "calc(100vh - 130px)" }}>
+    <div className="flex flex-col lg:flex-row gap-4 min-h-0" style={{ minHeight: "calc(100vh - 130px)" }}>
       {/* ── Left: form ────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 w-[420px] flex-shrink-0 overflow-y-auto pr-1">
+      <div className="flex flex-col gap-4 w-full lg:w-[420px] flex-shrink-0 lg:overflow-y-auto lg:pr-1">
 
         {/* Status type */}
         <Section title="Status">

@@ -11,9 +11,6 @@ export type IncidentPhase =
 
 export type IncidentSeverity = "red" | "black";
 
-/** 🔴 🟠 🟡 🟢 — tracks current state, independent of banner severity. */
-export type StatusEmoji = "red" | "orange" | "yellow" | "green";
-
 export type MessageRegister = "full" | "brief";
 
 /** "" = on-route. Otherwise selects an off-route / generic banner. */
@@ -57,7 +54,6 @@ export interface IncidentState {
   createdAt: number;
   phase: IncidentPhase;
   severity: IncidentSeverity;
-  status: StatusEmoji;
   register: MessageRegister;
   offRoute: OffRoute;
   /** "" = automatic from phase/severity, "none" = no banner, else a banner id. */

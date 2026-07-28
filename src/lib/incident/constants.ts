@@ -1,29 +1,12 @@
 import type {
   IncidentPhase,
   IncidentState,
-  StatusEmoji,
   CommandRole,
 } from "./types";
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
 
 export const LS_INCIDENTS_KEY = "ma-incidents-v1";
-
-// ─── Status emoji ladder ──────────────────────────────────────────────────────
-
-export const STATUS_EMOJI: Record<StatusEmoji, string> = {
-  red: "🔴",
-  orange: "🟠",
-  yellow: "🟡",
-  green: "🟢",
-};
-
-export const STATUS_LABELS: Record<StatusEmoji, string> = {
-  red: "Major / ongoing",
-  orange: "Significant",
-  yellow: "Minor / monitoring",
-  green: "Resolved",
-};
 
 // ─── Phases ───────────────────────────────────────────────────────────────────
 
@@ -181,7 +164,6 @@ export function newIncident(): IncidentState {
     createdAt: Date.now(),
     phase: "holding",
     severity: "red",
-    status: "red",
     register: "full",
     offRoute: "",
     bannerOverride: "",

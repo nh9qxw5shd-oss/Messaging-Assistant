@@ -31,7 +31,7 @@ export default function Header() {
   return (
     <header className="
       sticky top-0 z-40
-      flex items-center gap-4 px-5 py-3
+      flex flex-wrap items-center gap-x-4 gap-y-2 px-4 lg:px-5 py-3
       bg-panel border-b border-grid
       shadow-[0_1px_0_rgba(224,82,6,0.15)]
     ">
