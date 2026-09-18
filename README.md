@@ -152,7 +152,7 @@ All tables use `CREATE TABLE IF NOT EXISTS` and are prefixed `ma_`. The migratio
 
 | Tab | Output |
 |---|---|
-| Start of Service 05:30 | Full SoS — operational status, overnight safety, performance, TOC/NR status, on-call roster, ESR, weather, engineering |
+| Start of Service 05:30 | Full SoS — operational status, overnight safety, performance, TOC/NR status, on-call roster, ESR, weather, engineering. The three weather fields can be filled in one click from the NR Route 7 Day Forecast that DLog2 ingests into the shared Supabase project (`weather_forecasts` / `weather_forecast_days`): a risk line per forecast area (Lincolnshire, EM North, EM South, London - Luton), today's max / min temperatures per area, and the 24 hour summary — see `src/lib/weather/sosWeather.ts` |
 | Strategic AM 11:00 | Executive summary, performance snapshot, trends, interventions, PM opportunities, forward view |
 | Strategic PM 20:00 | Executive summary, performance snapshot, trends, interventions, forward risks (infra/fleet/crew/weather), outlook |
 | Tactical 09/15/22 | Greeting, SNDM/RCM, status, safety, performance, incidents, late running (GTR/EMR), seasonal slot |
