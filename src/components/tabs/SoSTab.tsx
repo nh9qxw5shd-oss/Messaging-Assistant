@@ -7,6 +7,7 @@ import { LONG_OPS, SHORT_OPS } from "@/lib/constants";
 import type { SeasonalTemplate } from "@/lib/types";
 import { useState } from "react";
 import clsx from "clsx";
+import { buildSosWeather, describeIssue, fetchLatestRouteForecast } from "@/lib/weather/sosWeather";
 
 const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
 const labelCls = "block font-mono uppercase tracking-widest text-muted mb-1.5";
@@ -25,6 +26,35 @@ export default function SoSTab() {
 
   const [showTemplates, setShowTemplates] = useState(false);
   const sosTemplates = seasonalTemplates.filter((t) => t.tab === "sos");
+
+  // Weather from the NR Route 7 Day Forecast (ingested by DLog2 into the
+  // shared Supabase project). One click fills the three weather fields in
+  // the message's established format; the text stays editable.
+  const [wxBusy, setWxBusy] = useState(false);
+  const [wxMsg, setWxMsg] = useState<{ tone: "ok" | "warn" | "err"; text: string } | null>(null);
+
+  async function fillWeatherFromForecast() {
+    setWxBusy(true);
+    setWxMsg(null);
+    try {
+      const fc = await fetchLatestRouteForecast();
+      if (!fc) {
+        setWxMsg({ tone: "warn", text: "No Route 7 Day Forecast in the shared store yet — drop today's PDF into DLog2 first." });
+        return;
+      }
+      const built = buildSosWeather(fc);
+      setSoS({ weather: built.weather, maxtemps: built.maxtemps, forecast: built.forecast });
+      const note = built.notes.length ? ` · ${built.notes.join(" ")}` : "";
+      setWxMsg({
+        tone: built.notes.length ? "warn" : "ok",
+        text: `Filled from the Route 7 Day Forecast ${describeIssue(fc)} for ${built.forDate}${note}`,
+      });
+    } catch (e) {
+      setWxMsg({ tone: "err", text: e instanceof Error ? e.message : "Could not read the forecast" });
+    } finally {
+      setWxBusy(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -156,13 +186,36 @@ export default function SoSTab() {
 
       {/* Weather */}
       <div className={sectionCls}>
-        <SectionHeading>Weather Forecast Summary</SectionHeading>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionHeading>Weather Forecast Summary</SectionHeading>
+          <button
+            type="button"
+            onClick={fillWeatherFromForecast}
+            disabled={wxBusy}
+            title="Fill the three weather fields from today's NR Route 7 Day Forecast (four areas), as ingested by DLog2"
+            className="mb-2 rounded border border-grid bg-panel2 px-3 py-1 font-mono text-xs uppercase tracking-widest text-ink/80 hover:border-accent hover:text-ink disabled:opacity-50"
+          >
+            {wxBusy ? "Reading forecast…" : "Fill from Route Forecast"}
+          </button>
+        </div>
+        {wxMsg && (
+          <p
+            className={clsx(
+              "-mt-1 text-xs",
+              wxMsg.tone === "ok" && "text-emerald-400",
+              wxMsg.tone === "warn" && "text-amber-400",
+              wxMsg.tone === "err" && "text-red-400",
+            )}
+          >
+            {wxMsg.text}
+          </p>
+        )}
         <AutoTextarea value={sos.weather} onChange={(v) => setSoS({ weather: v })} />
       </div>
 
       <div className={sectionCls}>
         <SectionHeading>Max Temperatures</SectionHeading>
-        <input type="text" value={sos.maxtemps} onChange={(e) => setSoS({ maxtemps: e.target.value })} placeholder="East Midlands: Max 18.0°c / Min 8.0°c; London North: Max 18.5°c / Min 12.0°c" className={inputCls} />
+        <input type="text" value={sos.maxtemps} onChange={(e) => setSoS({ maxtemps: e.target.value })} placeholder="Lincolnshire - Max 21.0 Min 14.5 / EM North - Max 20.0 Min 12.5 / EM South - Max 20.0 Min 14.0 / London - Luton - Max 20.0 Min 14.0" className={inputCls} />
       </div>
 
       <div className={sectionCls}>
