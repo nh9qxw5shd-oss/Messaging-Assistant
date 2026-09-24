@@ -7,6 +7,10 @@ export function buildSoS(_meta: MetaState, sos: SoSState): string {
   lines.push(sos.intro || "");
   lines.push("");
 
+  lines.push("*EM Autumn Data*");
+  lines.push("https://autumnarchive.derbycontrol.co.uk/archive");
+  lines.push("");
+
   lines.push("*Upcoming 08:30 Agenda*");
   lines.push("https://route-call.derbycontrol.co.uk");
   lines.push("");
