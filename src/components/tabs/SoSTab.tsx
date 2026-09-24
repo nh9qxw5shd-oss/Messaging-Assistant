@@ -3,11 +3,36 @@ import { useStore } from "@/lib/store";
 import AutoTextarea from "@/components/shared/AutoTextarea";
 import StatusSelect from "@/components/shared/StatusSelect";
 import PerfTable from "@/components/shared/PerfTable";
-import { LONG_OPS, SHORT_OPS } from "@/lib/constants";
+import { DEFAULT_SOS, LONG_OPS, SHORT_OPS } from "@/lib/constants";
 import type { SeasonalTemplate } from "@/lib/types";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { buildSosWeather, describeIssue, fetchLatestRouteForecast } from "@/lib/weather/sosWeather";
+import { buildSosEsr, describeRun, fetchLatestEsrRun } from "@/lib/esr/sosEsr";
+
+// Remembers which DLog2 snapshot last auto-filled the ESR fields and what it
+// wrote, so a new day's snapshot preloads automatically but an operator's
+// hand edits to the current one are never overwritten.
+const LS_ESR_AUTOFILL_KEY = "ma_sos_esr_autofill";
+
+type Esr = { imp: string; amd: string; wdn: string; pr: string; total: string };
+
+// Planned Removal is excluded: it stays manual unless NRSDB supplies ETRs, so
+// typing in it must not block the next day's preload.
+function sameEsr(a: Esr, b: Esr): boolean {
+  return a.imp === b.imp && a.amd === b.amd && a.wdn === b.wdn && a.total === b.total;
+}
+
+function readAutofill(): { snapshotDate: string; esr: Esr } | null {
+  try {
+    const raw = localStorage.getItem(LS_ESR_AUTOFILL_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function writeAutofill(snapshotDate: string, esr: Esr): void {
+  try { localStorage.setItem(LS_ESR_AUTOFILL_KEY, JSON.stringify({ snapshotDate, esr })); } catch { /* silent */ }
+}
 
 const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
 const labelCls = "block font-mono uppercase tracking-widest text-muted mb-1.5";
@@ -54,6 +79,57 @@ export default function SoSTab() {
     } finally {
       setWxBusy(false);
     }
+  }
+
+  // ESRs from DLog2's NRSDB snapshots (shared Supabase project). Preloaded
+  // when the tab opens if a newer snapshot exists and the fields hold either
+  // the defaults or the previous autofill; the button re-reads on demand.
+  const [esrBusy, setEsrBusy] = useState(false);
+  const [esrMsg, setEsrMsg] = useState<{ tone: "ok" | "warn" | "err"; text: string } | null>(null);
+
+  async function fillEsrFromDlog(auto = false) {
+    setEsrBusy(true);
+    if (!auto) setEsrMsg(null);
+    try {
+      const run = await fetchLatestEsrRun();
+      if (!run) {
+        if (!auto) setEsrMsg({ tone: "warn", text: "No ESR snapshot in DLog2 yet — build today's log first." });
+        return;
+      }
+      const current = useStore.getState().sos.esr;
+      const prev = readAutofill();
+      if (auto) {
+        const untouched = sameEsr(current, DEFAULT_SOS.esr) || (prev !== null && sameEsr(current, prev.esr));
+        if (prev?.snapshotDate === run.snapshotDate && sameEsr(current, prev.esr)) return;
+        if (!untouched) {
+          setEsrMsg({ tone: "warn", text: `DLog2 ESR snapshot ${run.snapshotDate} available — fields were edited by hand, so not overwritten. Use "Fill from DLog2" to load it.` });
+          return;
+        }
+      }
+      const built = buildSosEsr(run);
+      const filled: Esr = { ...current, ...built.esr };
+      setSoSEsrAll(filled);
+      writeAutofill(run.snapshotDate, filled);
+      setEsrMsg({
+        tone: built.notes.length ? "warn" : "ok",
+        text: `Filled from DLog2 ESR snapshot ${run.snapshotDate} (${describeRun(run)})${built.notes.length ? ` · ${built.notes.join(" ")}` : ""}`,
+      });
+    } catch (e) {
+      setEsrMsg({ tone: "err", text: e instanceof Error ? e.message : "Could not read the DLog2 ESR snapshot" });
+    } finally {
+      setEsrBusy(false);
+    }
+  }
+
+  const esrAutoRan = useRef(false);
+  useEffect(() => {
+    if (esrAutoRan.current) return;
+    esrAutoRan.current = true;
+    fillEsrFromDlog(true);
+  }, []);
+
+  function setSoSEsrAll(esr: Esr) {
+    (Object.keys(esr) as (keyof Esr)[]).forEach((k) => setSoSEsr(k, esr[k]));
   }
 
   return (
@@ -159,28 +235,43 @@ export default function SoSTab() {
       </div>
 
       {/* ESR */}
-      <div>
-        <SectionHeading>Emergency Speed Restrictions</SectionHeading>
-        <div className="grid grid-cols-3 gap-2 mb-2">
-          {(["imp", "amd", "wdn"] as const).map((k) => {
-            const labels = { imp: "Imposed", amd: "Amended", wdn: "Withdrawn" };
-            return (
-              <div key={k}>
-                <label className={labelCls}>{labels[k]}</label>
-                <input type="text" value={sos.esr[k]} onChange={(e) => setSoSEsr(k, e.target.value)} placeholder="Nil" className={inputCls} />
-              </div>
-            );
-          })}
+      <div className={sectionCls}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionHeading>Emergency Speed Restrictions</SectionHeading>
+          <button
+            type="button"
+            onClick={() => fillEsrFromDlog(false)}
+            disabled={esrBusy}
+            title="Fill the ESR fields from today's DLog2 NRSDB snapshot (imposed / amended / withdrawn vs the previous snapshot)"
+            className="mb-2 rounded border border-grid bg-panel2 px-3 py-1 font-mono text-xs uppercase tracking-widest text-ink/80 hover:border-accent hover:text-ink disabled:opacity-50"
+          >
+            {esrBusy ? "Reading DLog2…" : "Fill from DLog2"}
+          </button>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className={labelCls}>Planned Removal</label>
-            <input type="text" value={sos.esr.pr} onChange={(e) => setSoSEsr("pr", e.target.value)} placeholder="Nil" className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>Total</label>
-            <input type="text" value={sos.esr.total} onChange={(e) => setSoSEsr("total", e.target.value)} placeholder="e.g. 24 total ESRs in force" className={inputCls} />
-          </div>
+        {esrMsg && (
+          <p
+            className={clsx(
+              "-mt-1 text-xs",
+              esrMsg.tone === "ok" && "text-emerald-400",
+              esrMsg.tone === "warn" && "text-amber-400",
+              esrMsg.tone === "err" && "text-red-400",
+            )}
+          >
+            {esrMsg.text}
+          </p>
+        )}
+        {(["imp", "amd", "wdn", "pr"] as const).map((k) => {
+          const labels = { imp: "Imposed", amd: "Amended", wdn: "Withdrawn", pr: "Planned Removal" };
+          return (
+            <div key={k}>
+              <label className={labelCls}>{labels[k]}</label>
+              <AutoTextarea value={sos.esr[k]} onChange={(v) => setSoSEsr(k, v)} placeholder="Nil" minRows={1} />
+            </div>
+          );
+        })}
+        <div>
+          <label className={labelCls}>Total</label>
+          <input type="text" value={sos.esr.total} onChange={(e) => setSoSEsr("total", e.target.value)} placeholder="e.g. 24 ESRs in force" className={inputCls} />
         </div>
       </div>
 
