@@ -3,6 +3,7 @@ import type {
   StrategicAMState,
   StrategicPMState,
   TacticalState,
+  TacticalSlot,
   TargetMetric,
   TabKey,
 } from "./types";
@@ -90,6 +91,22 @@ export const BANNER_FILES: Partial<Record<TabKey, string>> = {
   tactical:     "/banners/tactical.png",
 };
 
+// ─── Tactical slots and greetings ────────────────────────────────────────────
+
+export const TACTICAL_SLOTS: TacticalSlot[] = ["0900", "1500", "2200"];
+
+export const TACTICAL_GREETINGS: Record<TacticalSlot, string> = {
+  "0900": "Good morning from the East Midlands Control Centre in Derby.",
+  "1500": "Good afternoon from the East Midlands Control Centre in Derby.",
+  "2200": "Good evening from the East Midlands Control Centre in Derby.",
+};
+
+/** Swap one standard greeting for the slot's own; a customised intro is returned unchanged. */
+export function greetingForSlot(intro: string, slot: TacticalSlot): string {
+  const standard = Object.values(TACTICAL_GREETINGS) as string[];
+  return standard.includes(intro.trim()) ? TACTICAL_GREETINGS[slot] : intro;
+}
+
 // ─── Default state factories ──────────────────────────────────────────────────
 
 export const DEFAULT_SOS: SoSState = {
@@ -106,6 +123,7 @@ export const DEFAULT_SOS: SoSState = {
   maxtemps: "",
   forecast: "",
   eng: "",
+  engMode: "auto",
   seasonal_opt: "",
 };
 
@@ -133,7 +151,11 @@ export const DEFAULT_STR_PM: StrategicPMState = {
 };
 
 export const DEFAULT_TAC: TacticalState = {
-  intro: "Good afternoon from the East Midlands Control Centre in Derby.",
+  // The slot is a placeholder here: the store's hydrate() replaces it with
+  // defaultTacticalSlot() on the client, so the server never reads the clock.
+  slot: "0900",
+  slotMode: "auto",
+  intro: TACTICAL_GREETINGS["1500"],
   sndm: "",
   rcm: "",
   status: LONG_OPS[0],
@@ -141,6 +163,8 @@ export const DEFAULT_TAC: TacticalState = {
   perf: [],
   incidents: "",
   late: { gtr20: "0", gtr10: "0", gtrInt: "", emr20: "0", emr10: "0", emrInt: "" },
+  eng: "",
+  engMode: "auto",
   seasonal: "",
 };
 

@@ -3,12 +3,14 @@ import { useStore } from "@/lib/store";
 import AutoTextarea from "@/components/shared/AutoTextarea";
 import StatusSelect from "@/components/shared/StatusSelect";
 import PerfTable from "@/components/shared/PerfTable";
+import EngineeringHubSection, { type FillMsg } from "@/components/shared/EngineeringHubSection";
 import { DEFAULT_SOS, LONG_OPS, SHORT_OPS } from "@/lib/constants";
 import type { SeasonalTemplate } from "@/lib/types";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { buildSosWeather, describeIssue, fetchLatestRouteForecast } from "@/lib/weather/sosWeather";
 import { buildSosEsr, describeRun, fetchLatestEsrRun } from "@/lib/esr/sosEsr";
+import { buildEngineeringForSlot, describeEngineeringFill, sosDateISO } from "@/lib/engineering/engineeringHub";
 
 // Remembers which DLog2 snapshot last auto-filled the ESR fields and what it
 // wrote, so a new day's snapshot preloads automatically but an operator's
@@ -32,6 +34,18 @@ function readAutofill(): { snapshotDate: string; esr: Esr } | null {
 
 function writeAutofill(snapshotDate: string, esr: Esr): void {
   try { localStorage.setItem(LS_ESR_AUTOFILL_KEY, JSON.stringify({ snapshotDate, esr })); } catch { /* silent */ }
+}
+
+// Remembers the engineering text last auto-filled from the Engineering Hub,
+// so the next preload can tell a fresh Hub update from an operator's hand edit.
+const LS_ENG_AUTOFILL_KEY = "ma_sos_eng_autofill";
+
+function readEngAutofill(): string | null {
+  try { return localStorage.getItem(LS_ENG_AUTOFILL_KEY); } catch { return null; }
+}
+
+function writeEngAutofill(text: string): void {
+  try { localStorage.setItem(LS_ENG_AUTOFILL_KEY, text); } catch { /* silent */ }
 }
 
 const inputCls = "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
@@ -131,6 +145,45 @@ export default function SoSTab() {
   function setSoSEsrAll(esr: Esr) {
     (Object.keys(esr) as (keyof Esr)[]).forEach((k) => setSoSEsr(k, esr[k]));
   }
+
+  // Critical engineering from the Engineering Hub (shared Supabase project),
+  // for the 05:30 slot of the SoS date. Preloaded when the tab opens and when
+  // switched to auto, but only over a blank field or the previous auto text —
+  // never over a hand edit. Refresh always reloads. Manual mode never reads.
+  const [engBusy, setEngBusy] = useState(false);
+  const [engMsg, setEngMsg] = useState<FillMsg>(null);
+
+  const fillEngFromHub = useCallback(async (auto = false) => {
+    setEngBusy(true);
+    if (!auto) setEngMsg(null);
+    try {
+      const r = await buildEngineeringForSlot("0530", sosDateISO());
+      // Read the store after the await: on first load this runs before hydrate.
+      const { eng: current, engMode } = useStore.getState().sos;
+      if (auto) {
+        if (engMode !== "auto") return;
+        const untouched = current.trim() === "" || current === readEngAutofill();
+        if (!untouched) {
+          if (current !== r.text) {
+            setEngMsg({ tone: "warn", text: `Engineering Hub text available — the field was edited by hand, so not overwritten. Use Refresh to load it.` });
+          }
+          return;
+        }
+      }
+      setSoS({ eng: r.text });
+      writeEngAutofill(r.text);
+      setEngMsg({ tone: "ok", text: describeEngineeringFill(r) });
+    } catch (e) {
+      setEngMsg({ tone: "err", text: e instanceof Error ? e.message : "Could not read the Engineering Hub" });
+    } finally {
+      setEngBusy(false);
+    }
+  }, [setSoS]);
+
+  useEffect(() => {
+    if (sos.engMode !== "auto") return;
+    fillEngFromHub(true);
+  }, [sos.engMode, fillEngFromHub]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -315,10 +368,16 @@ export default function SoSTab() {
       </div>
 
       {/* Engineering */}
-      <div className={sectionCls}>
-        <SectionHeading>Engineering and Critical Works</SectionHeading>
-        <AutoTextarea value={sos.eng} onChange={(v) => setSoS({ eng: v })} />
-      </div>
+      <EngineeringHubSection
+        title="Engineering and Critical Works"
+        mode={sos.engMode}
+        onModeChange={(m) => setSoS({ engMode: m })}
+        text={sos.eng}
+        onTextChange={(v) => setSoS({ eng: v })}
+        busy={engBusy}
+        msg={engMsg}
+        onRefresh={() => fillEngFromHub(false)}
+      />
 
       {/* Seasonal slot */}
       <div className={sectionCls}>

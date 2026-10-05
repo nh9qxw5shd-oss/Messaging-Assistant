@@ -50,6 +50,8 @@ export interface SoSState {
   maxtemps: string;
   forecast: string;
   eng: string;
+  /** "auto": the 05:30 engineering text is preloaded from the Engineering Hub. */
+  engMode: AutoMode;
   seasonal_opt: string;
 }
 
@@ -76,7 +78,16 @@ export interface StrategicPMState {
   outlook: string;
 }
 
+/** Which tactical message is being built. */
+export type TacticalSlot = "0900" | "1500" | "2200";
+
+/** Auto-filled from a live source, or overridden by hand. */
+export type AutoMode = "auto" | "manual";
+
 export interface TacticalState {
+  /** Set automatically from the London clock while slotMode is "auto". */
+  slot: TacticalSlot;
+  slotMode: AutoMode;
   intro: string;
   sndm: string;
   rcm: string;
@@ -92,6 +103,9 @@ export interface TacticalState {
     emr10: string;
     emrInt: string;
   };
+  /** Critical engineering section body (fetched from the Engineering Hub in auto mode). */
+  eng: string;
+  engMode: AutoMode;
   seasonal: string;
 }
 

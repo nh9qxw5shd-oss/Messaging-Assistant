@@ -127,6 +127,40 @@ If a value maps to the wrong field, set an explicit `pick` dot-path on that metr
 
 ---
 
+## Critical engineering from the Engineering Hub
+
+The Engineering Hub (the rebuilt WON Splitter) tracks the week's critical possessions with live status in the shared Supabase project, in the table **`eng_critical_items`** (anon-readable; the Hub owns the schema — this app never writes to it). The 22:00 tactical lists the critical engineering due overnight, the 05:30 Start of Service reports the outcomes, and ongoing or weekend works carry through later tactical messages until they conclude.
+
+### Tactical slot auto-selection
+
+The Tactical tab has a slot selector (09:00 / 15:00 / 22:00). While it shows **auto** it follows the London clock — 09:00 until 09:00, then 15:00, then 22:00, and it stays on 22:00 after 22:00 because the next message is the 05:30 SoS — re-evaluated when the tab opens and every minute. Picking a slot by hand switches to manual; the **Auto** button re-engages the clock. When the slot changes and the greeting is one of the three standard ones ("Good morning / afternoon / evening from the East Midlands Control Centre in Derby.") it is swapped to match; a customised greeting is never touched. The built message heads the section `🦺 *Critical Engineering – overnight*` for 22:00 and `🦺 *Critical Engineering*` otherwise, and omits it entirely when the text is blank.
+
+### Auto / Manual override
+
+Both engineering fields — **Critical Engineering** on the Tactical tab and **Engineering and Critical Works** on the SoS tab — have an **Auto from Engineering Hub / Manual** toggle, a **Refresh** button and a status line (green ok / amber warn / red error, as for the ESR fill).
+
+- **Tactical, auto**: the text is read-only and is (re)fetched when the tab opens, when the slot changes and on Refresh, for the slot on today's London date (a 22:00 message built after 22:00 still uses today). Switching to Manual keeps the current text and makes it editable; switching back to Auto re-fetches.
+- **SoS, auto**: preloaded for the 05:30 slot of the SoS date (today, or tomorrow once it is 22:00 or later) when the tab opens, the way the ESR fill preloads from DLog2: the field is only overwritten when it is blank or still holds the last auto-filled text (remembered in `localStorage` under `ma_sos_eng_autofill`); a hand edit is left alone with a warning, and Refresh loads the Hub text on demand. The field stays editable.
+- **Manual**: nothing is fetched; Refresh is disabled until the field is back on Auto.
+- A failed read keeps whatever text is in the field and shows the error.
+
+### Selection rule
+
+`src/lib/engineering/engineeringHub.ts` reads only the columns the message needs (rows starting within −4 / +3 days of the message time, plus anything still active regardless of date, plus anything concluded in the last day) and hands them to the shared logic. For a slot the section lists, in start order:
+
+- items still active (taken / behind schedule / overrun / partially achieved);
+- items due to start before the next message (for 22:00: tonight's works);
+- items concluded since the previous message (the 05:30 outcomes) — each reported exactly once;
+- items whose planned window overlapped the last period with no status update, flagged "no update received".
+
+So weekend and multi-night works carry through every message until they conclude. Items the Hub marks "exclude from messages" are skipped.
+
+### Shared logic — keep identical
+
+`src/lib/engineering/criticalMessage.ts` is a **verbatim copy** of the Hub's `src/lib/critical/criticalMessage.ts` (selection, status metadata, slot windows and the three-line item format). The two files must be kept identical so the Hub's message preview and this app's auto-filled section say the same thing: when one changes, copy it over the other unchanged.
+
+---
+
 ## Architecture
 
 ### State split
@@ -152,8 +186,8 @@ All tables use `CREATE TABLE IF NOT EXISTS` and are prefixed `ma_`. The migratio
 
 | Tab | Output |
 |---|---|
-| Start of Service 05:30 | Full SoS — operational status, overnight safety, performance, TOC/NR status, on-call roster, ESR, weather, engineering. The three weather fields can be filled in one click from the NR Route 7 Day Forecast that DLog2 ingests into the shared Supabase project (`weather_forecasts` / `weather_forecast_days`): a risk line per forecast area (Lincolnshire, EM North, EM South, London - Luton), today's max / min temperatures per area, and the 24 hour summary — see `src/lib/weather/sosWeather.ts` |
+| Start of Service 05:30 | Full SoS — operational status, overnight safety, performance, TOC/NR status, on-call roster, ESR, weather, engineering. The three weather fields can be filled in one click from the NR Route 7 Day Forecast that DLog2 ingests into the shared Supabase project (`weather_forecasts` / `weather_forecast_days`): a risk line per forecast area (Lincolnshire, EM North, EM South, London - Luton), today's max / min temperatures per area, and the 24 hour summary — see `src/lib/weather/sosWeather.ts`. The engineering field preloads from the Engineering Hub for the 05:30 slot — see "Critical engineering from the Engineering Hub" above |
 | Strategic AM 11:00 | Executive summary, performance snapshot, trends, interventions, PM opportunities, forward view |
 | Strategic PM 20:00 | Executive summary, performance snapshot, trends, interventions, forward risks (infra/fleet/crew/weather), outlook |
-| Tactical 09/15/22 | Greeting, SNDM/RCM, status, safety, performance, incidents, late running (GTR/EMR), seasonal slot |
+| Tactical 09/15/22 | Greeting, SNDM/RCM, status, safety, performance, incidents, late running (GTR/EMR), critical engineering (auto-filled from the Engineering Hub for the selected slot), seasonal slot |
 | Safety Message | Standardised A–D format — type/subtype, location/time, asset/people, what happened, immediate actions, status/owner |

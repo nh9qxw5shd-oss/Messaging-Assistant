@@ -47,6 +47,14 @@ export function buildTactical(_meta: MetaState, tac: TacticalState): string {
   lines.push(`🟥 10 > 20 minutes: ${l.emr10 || 0}`);
   lines.push(`Interventions: ${l.emrInt || ""}`);
 
+  // Critical engineering (from the Engineering Hub, or typed by hand). Omitted
+  // entirely when blank.
+  if (tac.eng?.trim()) {
+    lines.push("");
+    lines.push(tac.slot === "2200" ? "🦺 *Critical Engineering – overnight*" : "🦺 *Critical Engineering*");
+    lines.push(tac.eng.trim());
+  }
+
   if (tac.seasonal?.trim()) {
     lines.push("");
     lines.push(tac.seasonal.trim());
