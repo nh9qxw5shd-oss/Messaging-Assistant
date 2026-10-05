@@ -42,12 +42,8 @@ export default function AutoTextarea({
       placeholder={placeholder}
       rows={minRows}
       className={clsx(
-        "w-full resize-none rounded bg-panel2 border border-grid px-3 py-2",
-        "text-ink font-sans leading-relaxed",
-        "placeholder:text-muted",
-        "focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30",
-        "transition-colors duration-150",
-        readOnly && "font-mono cursor-default",
+        "input resize-none leading-relaxed",
+        readOnly && "cursor-default",
         className
       )}
     />

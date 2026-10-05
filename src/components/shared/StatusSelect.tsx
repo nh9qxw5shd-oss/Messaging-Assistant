@@ -10,17 +10,7 @@ interface Props {
 
 export default function StatusSelect({ value, options, onChange, className }: Props) {
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={clsx(
-        "w-full rounded bg-panel2 border border-grid px-3 py-2",
-        "text-ink font-sans",
-        "focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30",
-        "transition-colors duration-150 cursor-pointer",
-        className
-      )}
-    >
+    <select value={value} onChange={(e) => onChange(e.target.value)} className={clsx("input cursor-pointer", className)}>
       {options.map((opt) => (
         <option key={opt} value={opt}>
           {opt}

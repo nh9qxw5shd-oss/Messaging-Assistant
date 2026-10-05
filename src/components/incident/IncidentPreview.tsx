@@ -4,7 +4,8 @@ import { useStore } from "@/lib/store";
 import { useIncidentStore } from "@/lib/incident/store";
 import { renderIncident, buildIncidentHtml } from "@/lib/incident/render";
 import { resolveBanner, PHASE_LABELS } from "@/lib/incident/constants";
-import clsx from "clsx";
+import { ChevronDown, ChevronRight, ClipboardCopy, ImagePlus, Siren } from "lucide-react";
+import { Card, EmptyState } from "@/components/ui";
 
 function fmtTime(ts: number): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -16,7 +17,7 @@ function fmtTime(ts: number): string {
   }).format(new Date(ts));
 }
 
-/** Lives in the left rail (composer slot) while the incident tab is active. */
+/** Lives in the right-hand panel (composer slot) while the incident tab is active. */
 export default function IncidentPreview() {
   const { showToast } = useStore();
   const { hydrate, incidents, activeId, logSent } = useIncidentStore();
@@ -32,16 +33,17 @@ export default function IncidentPreview() {
 
   if (!inc || inc.phase === "closed") {
     return (
-      <div className="flex flex-col gap-2">
-        <span className="font-mono uppercase tracking-widest text-muted">
-          Incident preview
-        </span>
-        <p className="text-muted">
-          {inc
-            ? "This incident is closed — reopen it to build messages."
-            : "Start or select an incident and its message builds here."}
-        </p>
-      </div>
+      <Card title="Message" subtitle="Incident preview">
+        <EmptyState
+          icon={Siren}
+          title={inc ? "Incident closed" : "No incident selected"}
+          hint={
+            inc
+              ? "This incident is closed — reopen it to build messages."
+              : "Start or select an incident and its message builds here."
+          }
+        />
+      </Card>
     );
   }
 
@@ -92,97 +94,83 @@ export default function IncidentPreview() {
       ? "Copying logs the initial alert and moves the incident into the update cycle."
       : "Copying logs the message to the incident timeline.";
 
+  const stage = `${PHASE_LABELS[inc.phase]}${inc.phase === "update" ? ` ${inc.updateCount + 1}` : ""}`;
+
   return (
-    <div className="flex flex-col gap-3 min-w-0">
-      <span className="font-mono uppercase tracking-widest text-muted">
-        Preview · {PHASE_LABELS[inc.phase]}
-        {inc.phase === "update" ? ` ${inc.updateCount + 1}` : ""}
-      </span>
+    <>
+      <Card title="Message" subtitle={`Incident · ${stage}`} padded={false}>
+        {/* Banner preview */}
+        {banner && (
+          <div className="border-b border-edge bg-sunken px-4 py-3">
+            <div className="overflow-hidden rounded-lg border border-edge">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={banner.path} alt={banner.label} className="block h-auto w-full" />
+            </div>
+          </div>
+        )}
 
-      {/* Banner preview — flex-none so the timeline can't crush it */}
-      {banner && (
-        <div className="rounded overflow-hidden border border-grid/60 flex-none">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={banner.path} alt={banner.label} className="w-full h-auto block" />
+        {/* Message preview */}
+        <pre className="min-h-[220px] whitespace-pre-wrap break-words px-4 py-3 font-sans text-[13.5px] leading-relaxed text-ink">
+          {rendered || <span className="italic text-faint">Fill the form to build the message…</span>}
+        </pre>
+
+        {/* Actions */}
+        <div className="border-t border-edge p-3">
+          <div className="flex gap-2">
+            <button type="button" onClick={() => copy(false)} className="btn btn-primary flex-1">
+              <ClipboardCopy size={15} /> Copy text
+            </button>
+            <button
+              type="button"
+              onClick={() => copy(true)}
+              disabled={!banner}
+              className="btn"
+              title="Copy with the banner image for Teams"
+            >
+              <ImagePlus size={15} /> Banner
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-dim">{hint}</p>
         </div>
-      )}
-
-      {/* Message preview */}
-      <pre
-        className={clsx(
-          "flex-none rounded border p-3 font-mono text-sm whitespace-pre-wrap break-words leading-relaxed",
-          "bg-panel2 border-grid text-ink min-h-[160px]"
-        )}
-      >
-        {rendered || (
-          <span className="text-muted/40 italic">Fill the form to build the message…</span>
-        )}
-      </pre>
-
-      {/* Actions */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => copy(false)}
-          className={clsx(
-            "flex-1 px-4 py-2.5 rounded font-semibold font-sans",
-            "bg-accent text-white border border-accent/80",
-            "hover:bg-accent-dim transition-colors duration-150",
-            "shadow-orange-glow-sm"
-          )}
-        >
-          Copy text
-        </button>
-        <button
-          onClick={() => copy(true)}
-          disabled={!banner}
-          className={clsx(
-            "px-4 py-2.5 rounded font-semibold font-sans",
-            "bg-panel2 text-ink border border-grid",
-            "hover:border-accent/50 transition-colors duration-150",
-            "disabled:opacity-40 disabled:cursor-not-allowed"
-          )}
-        >
-          + Banner
-        </button>
-      </div>
-
-      <div className="text-sm text-muted/60">{hint}</div>
+      </Card>
 
       {/* Timeline */}
-      <div className="border-t border-grid/40 pt-2">
-        <button
-          onClick={() => setShowTimeline((v) => !v)}
-          className="font-mono uppercase tracking-widest text-muted hover:text-ink transition-colors"
-        >
-          {showTimeline ? "▾" : "▸"} Sent timeline ({inc.sent.length})
-        </button>
+      <Card
+        title="Sent timeline"
+        subtitle={`${inc.sent.length} sent`}
+        padded={false}
+        action={
+          <button
+            type="button"
+            onClick={() => setShowTimeline((v) => !v)}
+            className="btn btn-ghost btn-sm"
+            aria-expanded={showTimeline}
+          >
+            {showTimeline ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            {showTimeline ? "Hide" : "Show"}
+          </button>
+        }
+      >
         {showTimeline && (
-          <div className="flex flex-col gap-2 mt-2">
-            {inc.sent.length === 0 && (
-              <div className="text-muted/50 italic">Nothing sent yet.</div>
-            )}
+          <div className="flex flex-col gap-2 p-3">
+            {inc.sent.length === 0 && <p className="px-1 py-2 text-sm italic text-faint">Nothing sent yet.</p>}
             {[...inc.sent].reverse().map((m, i) => (
-              <div key={inc.sent.length - i} className="rounded border border-grid/60 bg-panel2 p-2.5">
-                <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
-                  <span className="font-mono text-sm text-muted">
-                    {fmtTime(m.ts)} · {PHASE_LABELS[m.phase]}
+              <div key={inc.sent.length - i} className="rounded-lg border border-edge bg-sunken p-2.5">
+                <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs text-dim">
+                    <span className="font-mono">{fmtTime(m.ts)}</span> · {PHASE_LABELS[m.phase]}
                     {m.updateNo ? ` ${m.updateNo}` : ""}
                   </span>
-                  <button
-                    onClick={() => copy(false, m.text)}
-                    className="font-mono text-sm text-accent hover:underline"
-                  >
-                    Re-copy
+                  <button type="button" onClick={() => copy(false, m.text)} className="btn btn-ghost btn-sm">
+                    <ClipboardCopy size={13} /> Re-copy
                   </button>
                 </div>
-                <pre className="font-mono text-sm whitespace-pre-wrap break-words text-muted">
-                  {m.text}
-                </pre>
+                <pre className="whitespace-pre-wrap break-words font-sans text-xs leading-relaxed text-dim">{m.text}</pre>
               </div>
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </Card>
+    </>
   );
 }

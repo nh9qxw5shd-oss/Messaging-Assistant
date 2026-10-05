@@ -8,11 +8,32 @@ import {
 } from "@/lib/supabase";
 import { BACKUP_INTERVAL_MS } from "@/lib/constants";
 import { startLivePerf } from "@/lib/rdm/livePerfClient";
-import Header    from "@/components/layout/Header";
-import LeftRail  from "@/components/layout/LeftRail";
-import RightRail from "@/components/layout/RightRail";
-import Card      from "@/components/shared/Card";
-import Toast     from "@/components/shared/Toast";
+import AppShell from "@/components/AppShell";
+import { FeedbackProvider } from "@/components/uiFeedback";
+import ToastBridge from "@/components/ToastBridge";
+import Composer from "@/components/composer/Composer";
+import IncidentPreview from "@/components/incident/IncidentPreview";
+import EmojiTray from "@/components/composer/EmojiTray";
+import { Card } from "@/components/ui";
+import { Smile } from "lucide-react";
+import type { TabKey } from "@/lib/types";
+import SoSTab          from "@/components/tabs/SoSTab";
+import StrategicAMTab  from "@/components/tabs/StrategicAMTab";
+import StrategicPMTab  from "@/components/tabs/StrategicPMTab";
+import TacticalTab     from "@/components/tabs/TacticalTab";
+import SafetyTab       from "@/components/tabs/SafetyTab";
+import IncidentTab     from "@/components/tabs/IncidentTab";
+import TargetsTab      from "@/components/tabs/TargetsTab";
+
+const TAB_PANELS: Record<TabKey, React.ReactNode> = {
+  sos:          <SoSTab />,
+  strategic_am: <StrategicAMTab />,
+  strategic_pm: <StrategicPMTab />,
+  tactical:     <TacticalTab />,
+  safety_msg:   <SafetyTab />,
+  incident:     <IncidentTab />,
+  targets:      <TargetsTab />,
+};
 
 export default function Page() {
   const {
@@ -23,8 +44,8 @@ export default function Page() {
     setSeasonalTemplates,
     setSupabaseReady,
     backupNow,
-    toast,
     theme,
+    activeTab,
   } = useStore();
 
   // ─── Hydrate session state from localStorage ─────────────────────────────
@@ -32,11 +53,9 @@ export default function Page() {
     hydrate();
   }, [hydrate]);
 
-  // ─── Apply theme class to <html> ─────────────────────────────────────────
+  // ─── Apply theme to <html> (tokens switch on data-theme) ─────────────────
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("light", theme === "light");
-    root.classList.toggle("dark", theme === "dark");
+    document.documentElement.dataset.theme = theme;
   }, [theme]);
 
   // ─── Load Supabase config ─────────────────────────────────────────────────
@@ -79,25 +98,34 @@ export default function Page() {
     };
   }, [backupNow]);
 
+  const isTargets = activeTab === "targets";
+
   return (
-    <>
-      <Header />
-      {/* Stacks on small screens (content first, composer below); side-by-side from lg up. */}
-      <main className="flex flex-col lg:flex-row gap-4 p-3 lg:p-4 items-start min-h-[calc(100vh-57px)]">
-        {/* Left rail — fixed width composer */}
-        <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1">
-          <LeftRail />
+    <FeedbackProvider>
+      <ToastBridge />
+      <AppShell>
+        {/* Form on the left; the composer (or the incident preview) sits in a
+            sticky panel on the right from xl, and below the form on smaller screens. */}
+        <div className={isTargets ? "" : "grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_380px]"}>
+          <div key={activeTab} className="fade-in min-w-0">
+            {TAB_PANELS[activeTab]}
+          </div>
+          {!isTargets && (
+            <aside className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-[calc(var(--topbar-h)+1.25rem)] xl:max-h-[calc(100vh-var(--topbar-h)-2.5rem)] xl:overflow-y-auto">
+              {activeTab === "incident" ? (
+                <>
+                  <IncidentPreview />
+                  <Card title={<span className="inline-flex items-center gap-2"><Smile size={15} /> Emoji tray</span>} subtitle="Click to copy">
+                    <EmojiTray />
+                  </Card>
+                </>
+              ) : (
+                <Composer />
+              )}
+            </aside>
+          )}
         </div>
-
-        {/* Right rail — tabs */}
-        <div className="flex-1 min-w-0 w-full order-1 lg:order-2">
-          <Card noPad className="min-h-[calc(100vh-89px)]">
-            <RightRail />
-          </Card>
-        </div>
-      </main>
-
-      <Toast message={toast} />
-    </>
+      </AppShell>
+    </FeedbackProvider>
   );
 }

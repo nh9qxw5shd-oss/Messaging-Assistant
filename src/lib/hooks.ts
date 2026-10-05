@@ -1,0 +1,117 @@
+"use client";
+// Shared client hooks: async loader, clock, count-up numbers, hotkeys,
+// local storage (SSR-safe, cross-component) and clipboard.
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+
+/** Run an async loader when its key changes; expose data / error / reload. */
+export function useAsync<T>(loader: () => Promise<T>, deps: unknown[]): { data: T | null; error: string | null; loading: boolean; reload: () => void } {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [tick, setTick] = useState(0);
+  const seq = useRef(0);
+  useEffect(() => {
+    const my = ++seq.current;
+    setLoading(true);
+    setError(null);
+    loader().then((d) => { if (my === seq.current) { setData(d); setLoading(false); } })
+      .catch((e) => { if (my === seq.current) { setError(e instanceof Error ? e.message : String(e)); setLoading(false); } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...deps, tick]);
+  const reload = useCallback(() => setTick((t) => t + 1), []);
+  return { data, error, loading, reload };
+}
+
+const noopSubscribe = () => () => {};
+/** False during the server render and hydration, true once running in the browser. Use it to
+ *  keep time- or storage-dependent text out of the prerendered HTML (avoids hydration mismatches). */
+export function useMounted(): boolean {
+  return useSyncExternalStore(noopSubscribe, () => true, () => false);
+}
+
+export function useNow(intervalMs = 30_000): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const id = setInterval(() => setNow(new Date()), intervalMs); return () => clearInterval(id); }, [intervalMs]);
+  return now;
+}
+
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+}
+
+/** Animates a number from its previous value to `value` (instant under reduced motion). */
+export function useCountUp(value: number, duration = 700): number {
+  const target = Number.isFinite(value) ? value : 0;
+  const [shown, setShown] = useState(target);
+  const from = useRef(0);
+  useEffect(() => {
+    const dur = prefersReducedMotion() ? 0 : duration;
+    const start = performance.now();
+    const a = from.current;
+    let raf = 0;
+    const tick = (t: number) => {
+      const k = dur === 0 ? 1 : Math.min(1, (t - start) / dur);
+      const eased = 1 - Math.pow(1 - k, 3);
+      setShown(Math.round(a + (target - a) * eased));
+      if (k < 1) raf = requestAnimationFrame(tick);
+      else from.current = target;
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return shown;
+}
+
+/** combo: "mod+k", "mod+s", "escape" (mod = Ctrl on Windows/Linux, Cmd on Mac). */
+export function useHotkey(combo: string, handler: (e: KeyboardEvent) => void, opts: { inInputs?: boolean } = {}) {
+  const ref = useRef(handler);
+  useEffect(() => { ref.current = handler; });
+  const inInputs = opts.inInputs ?? false;
+  useEffect(() => {
+    const parts = combo.toLowerCase().split("+");
+    const key = parts[parts.length - 1];
+    const needMod = parts.includes("mod");
+    const needShift = parts.includes("shift");
+    function onKey(e: KeyboardEvent) {
+      const mod = e.metaKey || e.ctrlKey;
+      if (needMod !== mod) return;
+      if (needShift !== e.shiftKey) return;
+      if (e.key.toLowerCase() !== key) return;
+      const target = e.target as HTMLElement | null;
+      const inInput = !!target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable);
+      if (inInput && !inInputs && !needMod && key !== "escape") return;
+      e.preventDefault();
+      ref.current(e);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [combo, inInputs]);
+}
+
+// localStorage-backed state via useSyncExternalStore (SSR-safe). Changes made
+// through `set` notify every subscriber on the page.
+const LS_EVENT = "ma:localstorage";
+function subscribeLs(cb: () => void) {
+  window.addEventListener("storage", cb);
+  window.addEventListener(LS_EVENT, cb);
+  return () => { window.removeEventListener("storage", cb); window.removeEventListener(LS_EVENT, cb); };
+}
+export function useLocalStorage<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] {
+  const raw = useSyncExternalStore(subscribeLs, () => { try { return localStorage.getItem(key); } catch { return null; } }, () => null);
+  const value = useMemo<T>(() => { if (raw == null) return initial; try { return JSON.parse(raw) as T; } catch { return initial; } }, [raw, initial]);
+  const set = useCallback((v: T | ((p: T) => T)) => {
+    const next = typeof v === "function" ? (v as (p: T) => T)(value) : v;
+    try { localStorage.setItem(key, JSON.stringify(next)); } catch { /* ignore */ }
+    window.dispatchEvent(new Event(LS_EVENT));
+  }, [key, value]);
+  return [value, set];
+}
+
+export function useCopy(resetMs = 1600): { copied: boolean; copy: (text: string) => Promise<boolean> } {
+  const [copied, setCopied] = useState(false);
+  const copy = useCallback(async (text: string) => {
+    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), resetMs); return true; }
+    catch { return false; }
+  }, [resetMs]);
+  return { copied, copy };
+}

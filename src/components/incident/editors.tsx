@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Check, Plus, X } from "lucide-react";
 import { useIncidentStore } from "@/lib/incident/store";
 import {
   OPERATORS,
@@ -8,33 +9,42 @@ import {
   uid,
 } from "@/lib/incident/constants";
 import type { IncidentState } from "@/lib/incident/types";
+import { Card } from "@/components/ui";
 import clsx from "clsx";
 
-// ─── Shared style tokens (matched to SafetyTab) ───────────────────────────────
+// ─── Kit class aliases (kept for existing imports) ────────────────────────────
 
-export const lbl = "block font-mono uppercase tracking-widest text-muted mb-1.5";
-/** Base input styling without a width — for fixed-width row inputs. */
-export const inpBase =
-  "rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors placeholder:text-muted/60";
-export const inp = `w-full ${inpBase}`;
-export const sel =
-  "w-full rounded bg-panel2 border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors cursor-pointer";
+export const lbl = "lbl";
+/** Input styling for fixed-width row inputs (add a width utility). */
+export const inpBase = "input";
+export const inp = "input";
+export const sel = "input cursor-pointer";
 
-export function Section({ title, children }: { title: string; children: React.ReactNode }) {
+/** One house-style card per logical form section. */
+export function Section({
+  title,
+  subtitle,
+  action,
+  children,
+}: {
+  title: string;
+  subtitle?: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="font-mono uppercase tracking-widest text-muted/60 text-xs border-b border-grid/40 pb-1">
-        {title}
-      </div>
-      {children}
-    </div>
+    <Card title={title} subtitle={subtitle} action={action}>
+      <div className="flex flex-col gap-3">{children}</div>
+    </Card>
   );
 }
 
+// A div rather than a <label> so fields holding buttons (segmented controls)
+// do not forward label clicks to their first button.
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label className={lbl}>{label}</label>
+    <div className="min-w-0">
+      <span className="lbl">{label}</span>
       {children}
     </div>
   );
@@ -52,24 +62,19 @@ export function Chip({
   title?: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className={clsx(
-        "px-3 py-1.5 rounded text-sm border transition-colors text-left",
-        selected
-          ? "bg-accent/15 border-accent text-accent"
-          : "bg-panel2 border-grid text-muted hover:border-accent/50 hover:text-ink"
-      )}
-    >
+    <button type="button" onClick={onClick} title={title} className="chip" aria-pressed={selected}>
       {children}
     </button>
   );
 }
 
-const removeBtn =
-  "px-2 rounded text-muted/60 hover:text-warn border border-transparent hover:border-warn/30 transition-colors";
+function RemoveButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={onClick} aria-label="Remove" title="Remove">
+      <X size={14} />
+    </button>
+  );
+}
 
 // ─── Operators impacted ───────────────────────────────────────────────────────
 
@@ -95,7 +100,7 @@ export function OperatorPicker({ inc }: { inc: IncidentState }) {
   const extras = inc.serviceGroups.filter((g) => !(OPERATORS as readonly string[]).includes(g));
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-1.5">
         {OPERATORS.map((g) => (
           <Chip key={g} selected={inc.serviceGroups.includes(g)} onClick={() => toggle(g)}>
@@ -104,7 +109,7 @@ export function OperatorPicker({ inc }: { inc: IncidentState }) {
         ))}
         {extras.map((g) => (
           <Chip key={g} selected onClick={() => toggle(g)} title="Click to remove">
-            {g} ✕
+            {g} <X size={12} />
           </Chip>
         ))}
       </div>
@@ -115,14 +120,10 @@ export function OperatorPicker({ inc }: { inc: IncidentState }) {
           onChange={(e) => setCustom(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addCustom()}
           placeholder="Add other operator…"
-          className={inp}
+          className="input min-w-0 flex-1"
         />
-        <button
-          type="button"
-          onClick={addCustom}
-          className="px-3 rounded border border-grid text-muted hover:text-ink hover:border-accent/50 transition-colors"
-        >
-          Add
+        <button type="button" onClick={addCustom} className="btn">
+          <Plus size={14} /> Add
         </button>
       </div>
     </div>
@@ -139,27 +140,27 @@ export function StrandedEditor({ inc }: { inc: IncidentState }) {
 
   // Ticking strikes the train through in the message with a "risk resolved"
   // note — the entry stays visible rather than disappearing.
-  const struck = "line-through text-muted/60";
+  const struck = "line-through text-faint";
 
   return (
     <div className="flex flex-col gap-2">
       {inc.stranded.map((t) => (
-        <div key={t.id} className="flex flex-wrap gap-1.5 items-center">
+        <div key={t.id} className="flex flex-wrap items-center gap-1.5">
           <input
-            className={clsx(inpBase, "w-20 flex-none font-mono", t.cleared && struck)}
+            className={clsx("input w-20 flex-none font-mono", t.cleared && struck)}
             value={t.headcode}
             onChange={(e) => update(t.id, { headcode: e.target.value.toUpperCase() })}
             placeholder="2O22"
             maxLength={4}
           />
           <input
-            className={clsx(inpBase, "w-40 flex-none", t.cleared && struck)}
+            className={clsx("input min-w-0 flex-1 sm:w-40 sm:flex-none", t.cleared && struck)}
             value={t.location}
             onChange={(e) => update(t.id, { location: e.target.value })}
             placeholder="Stood Bottesford Station"
           />
           <input
-            className={clsx(inp, "flex-1 min-w-[140px]", t.cleared && struck)}
+            className={clsx("input min-w-[140px] flex-1", t.cleared && struck)}
             value={t.plan}
             onChange={(e) => update(t.id, { plan: e.target.value })}
             placeholder="plan / status"
@@ -169,15 +170,9 @@ export function StrandedEditor({ inc }: { inc: IncidentState }) {
             onClick={() => update(t.id, { cleared: !t.cleared })}
             title="Mark risk resolved — strikes the train through in the message"
           >
-            ✓
+            <Check size={13} />
           </Chip>
-          <button
-            type="button"
-            className={removeBtn}
-            onClick={() => patch({ stranded: inc.stranded.filter((x) => x.id !== t.id) })}
-          >
-            ✕
-          </button>
+          <RemoveButton onClick={() => patch({ stranded: inc.stranded.filter((x) => x.id !== t.id) })} />
         </div>
       ))}
       <button
@@ -190,9 +185,9 @@ export function StrandedEditor({ inc }: { inc: IncidentState }) {
             ],
           })
         }
-        className="self-start px-3 py-1.5 rounded text-sm border border-grid text-muted hover:text-ink hover:border-accent/50 transition-colors"
+        className="btn btn-sm self-start"
       >
-        + Add train
+        <Plus size={13} /> Add train
       </button>
     </div>
   );
@@ -219,20 +214,20 @@ export function ResponseEditor({ inc }: { inc: IncidentState }) {
       <div className="flex flex-wrap gap-1.5">
         {RESPONSE_KINDS.map((k) => (
           <Chip key={k} selected={false} onClick={() => add(k)} title={`Add ${k}`}>
-            + {k}
+            <Plus size={12} /> {k}
           </Chip>
         ))}
       </div>
       {inc.response.map((r) => (
-        <div key={r.id} className="flex flex-wrap gap-1.5 items-center">
+        <div key={r.id} className="flex flex-wrap items-center gap-1.5">
           <input
-            className={clsx(inp, "flex-1 min-w-[160px]")}
+            className="input min-w-[160px] flex-1"
             value={r.label}
             onChange={(e) => update(r.id, { label: e.target.value })}
             placeholder={r.kind === "Other" ? "e.g. Richmond recovery" : `e.g. Nottingham ${r.kind}`}
           />
           <input
-            className={clsx(inpBase, "w-24 flex-none font-mono")}
+            className="input w-24 flex-none font-mono"
             value={r.eta}
             onChange={(e) => update(r.id, { eta: e.target.value })}
             placeholder="ETA"
@@ -245,13 +240,7 @@ export function ResponseEditor({ inc }: { inc: IncidentState }) {
           >
             On site
           </Chip>
-          <button
-            type="button"
-            className={removeBtn}
-            onClick={() => patch({ response: inc.response.filter((x) => x.id !== r.id) })}
-          >
-            ✕
-          </button>
+          <RemoveButton onClick={() => patch({ response: inc.response.filter((x) => x.id !== r.id) })} />
         </div>
       ))}
     </div>
@@ -274,38 +263,32 @@ export function CommandEditor({ inc }: { inc: IncidentState }) {
   return (
     <div className="flex flex-col gap-2">
       {inc.command.map((c) => (
-        <div key={c.id} className="flex flex-wrap gap-1.5 items-center">
+        <div key={c.id} className="flex flex-wrap items-center gap-1.5">
           <input
-            className={clsx(inpBase, "w-56 flex-none")}
+            className={clsx("input w-full sm:w-56 sm:flex-none", c.mandatory && "text-dim")}
             value={c.role}
             onChange={(e) => update(c.id, { role: e.target.value })}
             readOnly={c.mandatory}
           />
           <input
-            className={clsx(inp, "flex-1 min-w-[140px]")}
+            className="input min-w-[140px] flex-1"
             value={c.holder}
             onChange={(e) => update(c.id, { holder: e.target.value })}
             placeholder={c.mandatory ? "required" : "name / team"}
           />
           {!c.mandatory && (
-            <button
-              type="button"
-              className={removeBtn}
-              onClick={() => patch({ command: inc.command.filter((x) => x.id !== c.id) })}
-            >
-              ✕
-            </button>
+            <RemoveButton onClick={() => patch({ command: inc.command.filter((x) => x.id !== c.id) })} />
           )}
         </div>
       ))}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5 pt-1">
         {COMMAND_ROLE_PRESETS.filter((r) => !usedPresets.includes(r)).map((r) => (
           <Chip key={r} selected={false} onClick={() => add(r)}>
-            + {r}
+            <Plus size={12} /> {r}
           </Chip>
         ))}
         <Chip selected={false} onClick={() => add("")}>
-          + Other role
+          <Plus size={12} /> Other role
         </Chip>
       </div>
     </div>
