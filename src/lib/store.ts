@@ -5,6 +5,8 @@ import type {
   StrategicAMState,
   StrategicPMState,
   TacticalState,
+  TacticalSlot,
+  AutoMode,
   SafetyIncidentState,
   TargetMetric,
   TabKey,
@@ -27,7 +29,9 @@ import {
   LS_LIVEPERF_KEY,
   BACKUP_KEEP,
   BACKUP_TTL_DAYS,
+  greetingForSlot,
 } from "./constants";
+import { defaultTacticalSlot } from "./engineering/criticalMessage";
 import { propagateAll } from "./targetSync";
 import { applyAutoAmber, autoAmber } from "./ragLogic";
 
@@ -67,6 +71,17 @@ function saveBackups(list: BackupEntry[]): void {
 function pruneBackups(list: BackupEntry[]): BackupEntry[] {
   const cutoff = Date.now() - BACKUP_TTL_DAYS * 24 * 60 * 60 * 1000;
   return list.filter((b) => b.ts >= cutoff).slice(-BACKUP_KEEP);
+}
+
+/**
+ * While the tactical slot is on auto, point it at the slot the London clock
+ * says is next (09:00 / 15:00 / 22:00) and keep a standard greeting in step.
+ * Runs on the client only (hydrate / restore), never at module load.
+ */
+function withAutoSlot(tac: TacticalState): TacticalState {
+  if (tac.slotMode !== "auto") return tac;
+  const slot = defaultTacticalSlot();
+  return { ...tac, slot, intro: greetingForSlot(tac.intro, slot) };
 }
 
 // ─── Store interface ──────────────────────────────────────────────────────────
@@ -115,6 +130,8 @@ export interface AppStore {
 
   // ─── Tactical ─────────────────────────────────────────────────────────────
   setTac:     (partial: Partial<TacticalState>) => void;
+  /** Change the message slot; a standard greeting follows it, a customised one is left alone. */
+  setTacSlot: (slot: TacticalSlot, slotMode?: AutoMode) => void;
   setTacPerf: (index: number, partial: Partial<TargetMetric>) => void;
   setTacLate: (key: keyof TacticalState["late"], value: string) => void;
 
@@ -279,6 +296,17 @@ export const useStore = create<AppStore>((set, get) => {
       set((s) => ({ tac: { ...s.tac, ...partial } }));
       persist();
     },
+    setTacSlot: (slot, slotMode) => {
+      set((s) => ({
+        tac: {
+          ...s.tac,
+          slot,
+          slotMode: slotMode ?? s.tac.slotMode,
+          intro: slot !== s.tac.slot ? greetingForSlot(s.tac.intro, slot) : s.tac.intro,
+        },
+      }));
+      persist();
+    },
     setTacPerf: (index, partial) => {
       set((s) => {
         const perf = [...s.tac.perf];
@@ -424,19 +452,22 @@ export const useStore = create<AppStore>((set, get) => {
           const { sosPerf, tacPerf, amPerf, pmPerf } = syncPerf(s.targets, s);
           return {
             sos:    { ...s.sos,    perf: sosPerf },
-            tac:    { ...s.tac,    perf: tacPerf },
+            tac:    withAutoSlot({ ...s.tac, perf: tacPerf }),
             str_am: { ...s.str_am, perf: amPerf },
             str_pm: { ...s.str_pm, perf: pmPerf },
           };
         });
         return;
       }
+      // Saved sessions from before a field existed pick up its default here
+      // (e.g. slot / slotMode / eng / engMode), since saved values are spread
+      // over the defaults.
       set((s) => ({
         meta:       { ...s.meta,       ...(saved.meta       ?? {}) },
         sos:        { ...s.sos,        ...(saved.sos        ?? {}) },
         str_am:     { ...s.str_am,     ...(saved.str_am     ?? {}) },
         str_pm:     { ...s.str_pm,     ...(saved.str_pm     ?? {}) },
-        tac:        { ...s.tac,        ...(saved.tac        ?? {}) },
+        tac:        withAutoSlot({ ...s.tac, ...(saved.tac ?? {}) }),
         safety_msg: { ...s.safety_msg, ...(saved.safety_msg ?? {}) },
       }));
     },
