@@ -1,12 +1,16 @@
 "use client";
 import { useCallback, useEffect } from "react";
+import { ClipboardCopy, Smile, Wand2 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { buildMessage, buildTeamsHtml } from "@/lib/messageBuilders";
 import { captureMessageSnapshot } from "@/lib/snapshots/capture";
 import BannerPreview from "./BannerPreview";
 import EmojiTray from "./EmojiTray";
-import AutoTextarea from "@/components/shared/AutoTextarea";
-import clsx from "clsx";
+import { Card } from "@/components/ui";
+import { navFor } from "@/lib/nav";
+import { BANNER_FILES } from "@/lib/constants";
+import { SLOT_LABEL } from "@/lib/engineering/engineeringHub";
+import { BUILD_EVENT, COPY_EVENT } from "@/lib/uiEvents";
 
 export default function Composer() {
   const {
@@ -17,6 +21,7 @@ export default function Composer() {
     backupNow,
     meta, sos, str_am, str_pm, tac, safety_msg,
   } = useStore();
+  const { item } = navFor(activeTab);
 
   const build = useCallback(() => {
     const msg = buildMessage(activeTab, { meta, sos, str_am, str_pm, tac, safety_msg });
@@ -26,15 +31,6 @@ export default function Composer() {
     captureMessageSnapshot(activeTab, msg, { meta, sos, str_am, str_pm, tac, safety_msg });
     return msg;
   }, [activeTab, meta, sos, str_am, str_pm, tac, safety_msg, setBuiltMessage, backupNow]);
-
-  // Keyboard shortcut: Ctrl+Enter
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === "Enter") build();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [build]);
 
   async function copy() {
     const text = build();
@@ -63,76 +59,77 @@ export default function Composer() {
     }
   }
 
+  // Keyboard shortcut: Ctrl+Enter
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "Enter") build();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [build]);
+
+  // Build / copy requested from the command palette.
+  useEffect(() => {
+    const onBuild = () => build();
+    const onCopy = () => { void copy(); };
+    window.addEventListener(BUILD_EVENT, onBuild);
+    window.addEventListener(COPY_EVENT, onCopy);
+    return () => {
+      window.removeEventListener(BUILD_EVENT, onBuild);
+      window.removeEventListener(COPY_EVENT, onCopy);
+    };
+  });
+
   const hasMessage = builtMessage.trim().length > 0;
   // Targets is config; the incident tab carries its own composer in-panel.
   const isConfigTab = activeTab === "targets" || activeTab === "incident";
 
+  const slotLabel = activeTab === "tactical" ? `${SLOT_LABEL[tac.slot]} · ` : item.time ? `${item.time} · ` : "";
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* Section label */}
-      <div className="flex items-center gap-2">
-        <span className="font-mono uppercase tracking-widest text-muted">
-          Composer
-        </span>
-        <span className="text-muted/50 font-mono">· Ctrl+Enter to build</span>
-      </div>
+    <>
+      <Card
+        title="Message"
+        subtitle={`${slotLabel}${item.label}`}
+        padded={false}
+        action={!isConfigTab && (
+          <span className="hidden items-center gap-1 text-xs text-faint sm:inline-flex">
+            <kbd className="kbd">Ctrl</kbd><kbd className="kbd">Enter</kbd> to build
+          </span>
+        )}
+      >
+        {!isConfigTab && BANNER_FILES[activeTab] && (
+          <div className="border-b border-edge bg-sunken px-4 py-3">
+            <BannerPreview activeTab={activeTab} />
+          </div>
+        )}
+        <textarea
+          readOnly
+          value={builtMessage}
+          placeholder={
+            activeTab === "incident"
+              ? "Incident messages build and copy inside the tab."
+              : isConfigTab
+              ? "Select a message to build."
+              : "Built message appears here. Fill the form, then Build."
+          }
+          className="block h-[42vh] min-h-[220px] w-full resize-none overflow-y-auto border-0 bg-transparent px-4 py-3 text-[13.5px] leading-relaxed text-ink outline-none placeholder:text-faint"
+        />
+        {!isConfigTab && (
+          <div className="flex gap-2 border-t border-edge p-3">
+            <button onClick={build} className="btn btn-primary flex-1">
+              <Wand2 size={15} /> Build message
+            </button>
+            <button onClick={copy} disabled={!hasMessage} className="btn" title="Builds, then copies for WhatsApp and Teams">
+              <ClipboardCopy size={15} /> Copy
+            </button>
+          </div>
+        )}
+      </Card>
 
-      {/* Banner preview */}
-      {!isConfigTab && <BannerPreview activeTab={activeTab} />}
-
-      {/* Output */}
-      <AutoTextarea
-        value={builtMessage}
-        onChange={() => {}}
-        readOnly
-        placeholder={
-          activeTab === "incident"
-            ? "Incident messages build and copy inside the tab."
-            : isConfigTab
-            ? "Select a message tab to build."
-            : "Built message appears here…"
-        }
-        minRows={10}
-        className="font-mono leading-relaxed min-h-[200px] max-h-[45vh] overflow-y-auto"
-      />
-
-      {/* Actions */}
-      {!isConfigTab && (
-        <div className="flex gap-2">
-          <button
-            onClick={build}
-            className={clsx(
-              "flex-1 px-4 py-2.5 rounded font-semibold font-sans",
-              "bg-accent text-white border border-accent/80",
-              "hover:bg-accent-dim transition-colors duration-150",
-              "shadow-orange-glow-sm"
-            )}
-          >
-            Build message
-          </button>
-          <button
-            onClick={copy}
-            disabled={!hasMessage}
-            className={clsx(
-              "px-4 py-2.5 rounded font-semibold font-sans",
-              "bg-panel2 text-ink border border-grid",
-              "hover:border-accent/50 transition-colors duration-150",
-              "disabled:opacity-40 disabled:cursor-not-allowed"
-            )}
-          >
-            Copy
-          </button>
-        </div>
-      )}
-
-      {/* Divider */}
-      <div className="border-t border-grid/60" />
-
-      {/* Emoji tray */}
-      <span className="font-mono uppercase tracking-widest text-muted">
-        Emoji tray · click to copy
-      </span>
-      <EmojiTray />
-    </div>
+      <Card title={<span className="inline-flex items-center gap-2"><Smile size={15} /> Emoji tray</span>} subtitle="Click to copy">
+        <EmojiTray />
+      </Card>
+    </>
   );
 }

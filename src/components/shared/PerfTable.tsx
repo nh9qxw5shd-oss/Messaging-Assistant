@@ -4,6 +4,16 @@ import type { TargetMetric } from "@/lib/types";
 import { rag } from "@/lib/ragLogic";
 import { SOS_ONLY_METRIC } from "@/lib/constants";
 import clsx from "clsx";
+import { X } from "lucide-react";
+import { StatusDot } from "@/components/ui";
+
+/** Dot colour for the RAG emoji the message uses. */
+function ragColor(emoji: string): string {
+  if (emoji === "🟢") return "var(--good)";
+  if (emoji === "🟡" || emoji === "🟠") return "var(--moderate)";
+  if (emoji === "🔴") return "var(--poor)";
+  return "var(--text-faint)";
+}
 
 interface Props {
   metrics: TargetMetric[];
@@ -39,8 +49,7 @@ function AutoExpandTextarea({
       placeholder={placeholder}
       rows={1}
       className={clsx(
-        "w-full resize-none bg-transparent leading-snug",
-        "focus:outline-none placeholder:text-muted/50",
+        "input resize-none !py-1 text-[13px] leading-snug",
         disabled && "opacity-50 cursor-not-allowed"
       )}
     />
@@ -53,12 +62,14 @@ function NumberInput({
   disabled,
   placeholder,
   suffix,
+  color,
 }: {
   value: number | string;
   onChange: (v: number | string) => void;
   disabled?: boolean;
   placeholder?: string;
   suffix?: string;
+  color?: string;
 }) {
   const input = (
     <input
@@ -70,10 +81,12 @@ function NumberInput({
       onChange={(e) =>
         onChange(e.target.value === "" ? "" : Number(e.target.value))
       }
+      style={color ? { color } : undefined}
       className={clsx(
-        "w-full bg-transparent text-center",
-        "focus:outline-none placeholder:text-muted/50",
-        disabled && "opacity-50 cursor-not-allowed"
+        "w-full min-w-[3.5rem] text-right font-mono tabular-nums",
+        disabled
+          ? "cursor-default bg-transparent px-1 py-1 text-dim outline-none"
+          : "input !px-2 !py-1 font-semibold"
       )}
     />
   );
@@ -81,68 +94,65 @@ function NumberInput({
   return (
     <div className="flex items-center gap-0.5">
       {input}
-      <span className="text-muted shrink-0">{suffix}</span>
+      <span className="shrink-0 text-faint">{suffix}</span>
     </div>
   );
 }
 
 export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }: Props) {
-  const thCls = "font-mono uppercase tracking-widest text-muted pb-2 text-left px-2";
-  const tdCls = "px-2 py-1.5 border-b border-grid/40 align-top";
-
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
+      <table className="tbl">
         <thead>
           <tr>
-            <th className={clsx(thCls, "w-8 text-center")}>RAG</th>
-            <th className={thCls}>Metric</th>
-            <th className={clsx(thCls, "w-16 text-center")}>Value</th>
-            <th className={clsx(thCls, "w-16 text-center")}>Target</th>
-            <th className={clsx(thCls, "w-16 text-center")}>Amber</th>
-            <th className={clsx(thCls, "w-28")}>Direction</th>
-            <th className={thCls}>Notes</th>
-            {!locked && onRemove && <th className={clsx(thCls, "w-8")} />}
+            <th className="w-10 text-center">RAG</th>
+            <th>Metric</th>
+            <th className="w-24 text-right">Value</th>
+            <th className="w-20 text-right">Target</th>
+            <th className="w-20 text-right">Amber</th>
+            <th className="w-32">Better</th>
+            <th className="min-w-[10rem]">Notes</th>
+            {!locked && onRemove && <th className="w-10" />}
           </tr>
         </thead>
         <tbody>
           {metrics.map((m, i) => {
             const ragEmoji = rag(m);
+            const color = ragColor(ragEmoji);
+            const hasValue = m.value !== "" && m.value !== null && m.value !== undefined;
             return (
-              <tr
-                key={i}
-                className="group hover:bg-panel2/50 transition-colors"
-              >
+              <tr key={i}>
                 {/* RAG */}
-                <td className={clsx(tdCls, "text-center text-base leading-none")}>
-                  {ragEmoji}
+                <td className="!align-middle text-center" title={ragEmoji}>
+                  <StatusDot color={color} />
                 </td>
 
                 {/* Metric name */}
-                <td className={tdCls}>
-                  <input
-                    type="text"
-                    value={m.name}
-                    disabled={locked}
-                    onChange={(e) => onUpdate(i, { name: e.target.value })}
-                    className={clsx(
-                      "w-full bg-transparent text-ink focus:outline-none",
-                      locked && "opacity-70 cursor-not-allowed"
-                    )}
-                  />
+                <td className="!align-middle">
+                  {locked ? (
+                    <span className="font-semibold">{m.name}</span>
+                  ) : (
+                    <input
+                      type="text"
+                      value={m.name}
+                      onChange={(e) => onUpdate(i, { name: e.target.value })}
+                      className="input !py-1"
+                    />
+                  )}
                 </td>
 
                 {/* Value — always editable */}
-                <td className={tdCls}>
+                <td>
                   <NumberInput
                     value={m.value}
                     onChange={(v) => onUpdate(i, { value: v })}
                     suffix={m.name.trim().toLowerCase() === SOS_ONLY_METRIC ? "%" : undefined}
+                    color={hasValue ? color : undefined}
                   />
                 </td>
 
                 {/* Target */}
-                <td className={tdCls}>
+                <td>
                   <NumberInput
                     value={m.target}
                     onChange={(v) => onUpdate(i, { target: v })}
@@ -151,10 +161,7 @@ export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }
                 </td>
 
                 {/* Amber — auto-calculated from target, never editable */}
-                <td
-                  className={tdCls}
-                  title="Auto-calculated: target −5 (higher-is-better) or +0.5 (lower-is-better)"
-                >
+                <td title="Auto-calculated: target −5 (higher-is-better) or +0.5 (lower-is-better)">
                   <NumberInput
                     value={m.amber}
                     onChange={() => {}}
@@ -163,25 +170,25 @@ export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }
                 </td>
 
                 {/* Direction */}
-                <td className={tdCls}>
-                  <select
-                    value={m.dir}
-                    disabled={locked}
-                    onChange={(e) =>
-                      onUpdate(i, { dir: e.target.value as "higher" | "lower" })
-                    }
-                    className={clsx(
-                      "w-full bg-transparent focus:outline-none cursor-pointer",
-                      locked && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    <option value="higher">↑ higher</option>
-                    <option value="lower">↓ lower</option>
-                  </select>
+                <td className="!align-middle">
+                  {locked ? (
+                    <span className="text-dim">{m.dir === "lower" ? "↓ lower" : "↑ higher"}</span>
+                  ) : (
+                    <select
+                      value={m.dir}
+                      onChange={(e) =>
+                        onUpdate(i, { dir: e.target.value as "higher" | "lower" })
+                      }
+                      className="input min-w-[7.5rem] cursor-pointer !py-1"
+                    >
+                      <option value="higher">↑ higher</option>
+                      <option value="lower">↓ lower</option>
+                    </select>
+                  )}
                 </td>
 
                 {/* Notes — always editable */}
-                <td className={tdCls}>
+                <td>
                   <AutoExpandTextarea
                     value={m.notes}
                     onChange={(v) => onUpdate(i, { notes: v })}
@@ -191,13 +198,15 @@ export default function PerfTable({ metrics, locked = true, onUpdate, onRemove }
 
                 {/* Remove button (unlocked only) */}
                 {!locked && onRemove && (
-                  <td className={clsx(tdCls, "text-center")}>
+                  <td className="!align-middle text-center">
                     <button
+                      type="button"
                       onClick={() => onRemove(i)}
-                      className="text-muted hover:text-bad transition-colors leading-none"
+                      className="btn btn-ghost btn-icon btn-sm hover:!text-poor"
                       title="Remove metric"
+                      aria-label={`Remove ${m.name}`}
                     >
-                      ✕
+                      <X size={14} />
                     </button>
                   </td>
                 )}

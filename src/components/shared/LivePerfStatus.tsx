@@ -1,7 +1,8 @@
 "use client";
 import { useStore } from "@/lib/store";
 import { refreshLivePerf } from "@/lib/rdm/livePerfClient";
-import clsx from "clsx";
+import { Pause, Play, RefreshCw } from "lucide-react";
+import { StatusDot } from "@/components/ui";
 
 // Status bar for the NWR live performance feed: state dot, last-updated time,
 // and pause/refresh controls. Values land in the perf table automatically —
@@ -19,13 +20,13 @@ export default function LivePerfStatus() {
   const { livePerf, toggleLivePerf } = useStore();
   const { enabled, status, lastUpdated, message } = livePerf;
 
-  const dotCls = !enabled
-    ? "bg-muted"
+  const color = !enabled
+    ? "var(--text-faint)"
     : status === "error"
-      ? "bg-bad"
+      ? "var(--poor)"
       : status === "ok"
-        ? "bg-good animate-pulse"
-        : "bg-warn";
+        ? "var(--good)"
+        : "var(--moderate)";
 
   let text: string;
   if (!enabled) {
@@ -39,29 +40,31 @@ export default function LivePerfStatus() {
   }
 
   return (
-    <div className="flex items-center gap-2 mb-2 text-muted font-mono uppercase tracking-widest">
-      <span className={clsx("h-2 w-2 rounded-full shrink-0", dotCls)} />
-      <span className="truncate" title={text}>{text}</span>
-      <span className="flex-1" />
+    <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+      <span
+        className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+        style={{ color, background: `color-mix(in srgb, ${color} 14%, transparent)` }}
+        title={text}
+      >
+        <StatusDot color={color} pulse={enabled && status === "ok"} />
+        <span className="truncate">{text}</span>
+      </span>
       {enabled && (
-        <button
-          onClick={() => refreshLivePerf()}
-          className="text-accent hover:text-accent/80 transition-colors shrink-0"
-          title="Fetch the latest figures now"
-        >
-          Refresh
+        <button type="button" onClick={() => refreshLivePerf()} className="btn btn-ghost btn-sm" title="Fetch the latest figures now">
+          <RefreshCw size={13} /> Refresh
         </button>
       )}
       <button
+        type="button"
         onClick={() => {
           toggleLivePerf();
           // Resuming should show fresh data immediately, not wait for a tick.
           if (!enabled) refreshLivePerf();
         }}
-        className="text-accent hover:text-accent/80 transition-colors shrink-0"
+        className="btn btn-ghost btn-sm"
         title={enabled ? "Stop auto-filling values" : "Resume auto-filling values"}
       >
-        {enabled ? "Pause" : "Resume"}
+        {enabled ? <><Pause size={13} /> Pause</> : <><Play size={13} /> Resume</>}
       </button>
     </div>
   );

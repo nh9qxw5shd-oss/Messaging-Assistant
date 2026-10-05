@@ -1,7 +1,8 @@
 "use client";
-import clsx from "clsx";
+import { HardHat, RefreshCw } from "lucide-react";
 import AutoTextarea from "./AutoTextarea";
 import type { AutoMode } from "@/lib/types";
+import { Card } from "@/components/ui";
 
 export type FillMsg = { tone: "ok" | "warn" | "err"; text: string } | null;
 
@@ -17,38 +18,32 @@ interface Props {
   msg: FillMsg;
   onRefresh: () => void;
   placeholder?: string;
+  id?: string;
 }
 
-const btnCls = "rounded border border-grid bg-panel2 px-3 py-1 font-mono text-xs uppercase tracking-widest text-ink/80 hover:border-accent hover:text-ink disabled:opacity-50 disabled:hover:border-grid disabled:hover:text-ink/80";
+const TONE: Record<"ok" | "warn" | "err", string> = { ok: "var(--good)", warn: "var(--moderate)", err: "var(--poor)" };
 
 /**
  * A message section whose text comes from the Engineering Hub: Auto / Manual
  * toggle, Refresh, and a status line in the same tones as the ESR fill.
  */
 export default function EngineeringHubSection({
-  title, mode, onModeChange, text, onTextChange, readOnlyWhenAuto = false, busy, msg, onRefresh, placeholder,
+  title, mode, onModeChange, text, onTextChange, readOnlyWhenAuto = false, busy, msg, onRefresh, placeholder, id,
 }: Props) {
   const auto = mode === "auto";
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h4 className="font-sans font-semibold text-ink/80 mb-2">{title}</h4>
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <div className="inline-flex overflow-hidden rounded border border-grid" role="group" aria-label={`${title} source`}>
+    <Card
+      id={id}
+      title={<span className="inline-flex items-center gap-2"><HardHat size={15} className="text-accent" /> {title}</span>}
+      subtitle={msg ? <span style={{ color: TONE[msg.tone] }}>{msg.text}</span> : auto ? "From the Engineering Hub" : "Manual text"}
+      action={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-1.5" role="group" aria-label={`${title} source`}>
             {([
-              ["auto", "Auto from Engineering Hub"],
+              ["auto", "Auto from Hub"],
               ["manual", "Manual"],
             ] as const).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => onModeChange(value)}
-                aria-pressed={mode === value}
-                className={clsx(
-                  "px-3 py-1 font-mono text-xs uppercase tracking-widest transition-colors",
-                  mode === value ? "bg-accent text-white" : "bg-panel2 text-muted hover:text-ink",
-                )}
-              >
+              <button key={value} type="button" className="chip" aria-pressed={mode === value} onClick={() => onModeChange(value)}>
                 {label}
               </button>
             ))}
@@ -58,30 +53,20 @@ export default function EngineeringHubSection({
             onClick={onRefresh}
             disabled={busy || !auto}
             title={auto ? "Re-read the critical items from the Engineering Hub" : "Switch to Auto to refresh from the Engineering Hub"}
-            className={btnCls}
+            className="btn btn-ghost btn-sm"
           >
-            {busy ? "Reading Hub…" : "Refresh"}
+            {busy ? <span className="spinner" /> : <RefreshCw size={13} />} {busy ? "Reading…" : "Refresh"}
           </button>
         </div>
-      </div>
-      {msg && (
-        <p
-          className={clsx(
-            "-mt-1 text-xs",
-            msg.tone === "ok" && "text-emerald-400",
-            msg.tone === "warn" && "text-amber-400",
-            msg.tone === "err" && "text-red-400",
-          )}
-        >
-          {msg.text}
-        </p>
-      )}
+      }
+    >
       <AutoTextarea
         value={text}
         onChange={onTextChange}
         readOnly={auto && readOnlyWhenAuto}
         placeholder={placeholder}
+        className="font-mono text-[13px]"
       />
-    </div>
+    </Card>
   );
 }

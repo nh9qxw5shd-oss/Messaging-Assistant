@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { ChevronRight, Check, Plus, RotateCcw, Siren, Trash2 } from "lucide-react";
 import { useIncidentStore } from "@/lib/incident/store";
 import {
   PHASE_LABELS,
@@ -16,72 +17,82 @@ import {
   StrandedEditor,
   ResponseEditor,
   CommandEditor,
-  inp,
-  sel,
 } from "@/components/incident/editors";
 import AutoTextarea from "@/components/shared/AutoTextarea";
-import clsx from "clsx";
+import TabHeader from "@/components/TabHeader";
+import { Badge, Card, EmptyState } from "@/components/ui";
+import { useDialog } from "@/components/uiFeedback";
 
 // ─── Incident rail ────────────────────────────────────────────────────────────
 
 function IncidentRail() {
-  const { incidents, activeId, setActive, createIncident, reopenIncident, deleteIncident } =
-    useIncidentStore();
+  const { incidents, activeId, setActive, reopenIncident, deleteIncident } = useIncidentStore();
+  const dialog = useDialog();
   const open = incidents.filter((i) => i.phase !== "closed");
   const closed = incidents.filter((i) => i.phase === "closed");
 
+  if (incidents.length === 0) return null;
+
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {open.map((i) => (
-        <button
-          key={i.id}
-          onClick={() => setActive(i.id)}
-          className={clsx(
-            "px-3 py-1.5 rounded text-sm border transition-colors max-w-[260px] truncate",
-            i.id === activeId
-              ? "bg-accent/15 border-accent text-accent"
-              : "bg-panel2 border-grid text-muted hover:border-accent/50 hover:text-ink"
-          )}
-        >
-          {i.title.trim() || "New incident"}
-        </button>
-      ))}
-      <button
-        onClick={createIncident}
-        className="px-3 py-1.5 rounded text-sm border border-dashed border-grid text-muted hover:text-ink hover:border-accent/50 transition-colors"
-      >
-        + New incident
-      </button>
-      {closed.length > 0 && (
-        <div className="flex items-center gap-1.5 pl-2 ml-1 border-l border-grid/60">
-          <span className="text-xs font-mono uppercase tracking-widest text-muted/50">Closed</span>
-          {closed.map((i) => (
-            <span
-              key={i.id}
-              className="flex items-center gap-1 px-2 py-1 rounded text-xs border border-grid/60 text-muted/70 max-w-[200px]"
-            >
-              <span className="truncate">{i.title.trim() || "Untitled"}</span>
+    <Card title="Incidents" subtitle={`${open.length} open${closed.length ? ` · ${closed.length} closed` : ""}`}>
+      <div className="flex flex-col gap-3">
+        {open.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {open.map((i) => (
               <button
-                onClick={() => reopenIncident(i.id)}
-                title="Reopen"
-                className="hover:text-accent"
+                key={i.id}
+                type="button"
+                onClick={() => setActive(i.id)}
+                className="chip max-w-[260px]"
+                aria-pressed={i.id === activeId}
               >
-                ↻
+                <span className="truncate">{i.title.trim() || "New incident"}</span>
               </button>
-              <button
-                onClick={() => {
-                  if (window.confirm("Delete this incident and its timeline?")) deleteIncident(i.id);
-                }}
-                title="Delete"
-                className="hover:text-warn"
-              >
-                ✕
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
+            ))}
+          </div>
+        )}
+        {closed.length > 0 && (
+          <div className={open.length > 0 ? "border-t border-edge pt-3" : ""}>
+            <span className="lbl">Closed</span>
+            <div className="flex flex-wrap gap-1.5">
+              {closed.map((i) => (
+                <span
+                  key={i.id}
+                  className="inline-flex max-w-[240px] items-center gap-0.5 rounded-full border border-edge py-0.5 pl-3 pr-1 text-xs text-dim"
+                >
+                  <span className="truncate">{i.title.trim() || "Untitled"}</span>
+                  <button
+                    type="button"
+                    onClick={() => reopenIncident(i.id)}
+                    title="Reopen"
+                    aria-label="Reopen"
+                    className="btn btn-ghost btn-icon btn-sm"
+                  >
+                    <RotateCcw size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const ok = await dialog.confirm({
+                        title: "Delete this incident and its timeline?",
+                        confirmLabel: "Delete",
+                        danger: true,
+                      });
+                      if (ok) deleteIncident(i.id);
+                    }}
+                    title="Delete"
+                    aria-label="Delete"
+                    className="btn btn-ghost btn-icon btn-sm hover:!text-poor"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </Card>
   );
 }
 
@@ -92,31 +103,38 @@ function PhaseStepper({ inc }: { inc: IncidentState }) {
   // Stages that have had a message copied out show green, marking progress.
   const sentPhases = new Set(inc.sent.map((m) => m.phase));
   return (
-    <div className="flex flex-wrap items-center gap-1">
-      {PHASE_ORDER.map((p, idx) => {
-        const active = inc.phase === p;
-        const done = sentPhases.has(p);
-        return (
-          <div key={p} className="flex items-center gap-1">
-            {idx > 0 && <span className="text-muted/30">→</span>}
-            <button
-              onClick={() => setPhase(p)}
-              className={clsx(
-                "px-3 py-1.5 rounded text-sm font-mono border transition-colors",
-                active && "bg-accent/15 border-accent text-accent",
-                !active && done && "bg-good/15 border-good text-good hover:border-good",
-                !active && !done &&
-                  "bg-panel2 border-grid text-muted hover:text-ink hover:border-accent/50"
-              )}
-            >
-              {done ? "✓ " : ""}
-              {PHASE_LABELS[p]}
-              {p === "update" && inc.updateCount > 0 ? ` (${inc.updateCount} sent)` : ""}
-            </button>
-          </div>
-        );
-      })}
-    </div>
+    <Card title="Message stage" subtitle="Stages with a message copied out are marked done.">
+      <div className="flex flex-wrap items-center gap-1">
+        {PHASE_ORDER.map((p, idx) => {
+          const active = inc.phase === p;
+          const done = sentPhases.has(p);
+          return (
+            <div key={p} className="flex items-center gap-1">
+              {idx > 0 && <ChevronRight size={13} className="text-faint" />}
+              <button
+                type="button"
+                onClick={() => setPhase(p)}
+                className="chip"
+                aria-pressed={active}
+                style={
+                  !active && done
+                    ? {
+                        color: "var(--good)",
+                        borderColor: "color-mix(in srgb, var(--good) 55%, transparent)",
+                        background: "color-mix(in srgb, var(--good) 12%, transparent)",
+                      }
+                    : undefined
+                }
+              >
+                {done && <Check size={12} />}
+                {PHASE_LABELS[p]}
+                {p === "update" && inc.updateCount > 0 ? ` (${inc.updateCount} sent)` : ""}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
@@ -124,40 +142,67 @@ function PhaseStepper({ inc }: { inc: IncidentState }) {
 
 function IdentitySection({ inc }: { inc: IncidentState }) {
   const { patch, closeIncident } = useIncidentStore();
+  const dialog = useDialog();
   return (
-    <Section title="Incident">
+    <Section
+      title="Incident"
+      action={
+        <button
+          type="button"
+          onClick={async () => {
+            const ok = await dialog.confirm({
+              title: "Close this incident? It moves to the closed list.",
+              confirmLabel: "Close incident",
+              danger: true,
+            });
+            if (ok) closeIncident();
+          }}
+          className="btn btn-danger btn-sm"
+        >
+          Close incident
+        </button>
+      }
+    >
       <Field label="Title — type of failure / event – location">
         <input
-          className={inp}
+          className="input"
           value={inc.title}
           onChange={(e) => patch({ title: e.target.value })}
           placeholder="e.g. Car on the Line Orston"
         />
       </Field>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Severity (banner)">
-          <div className="grid grid-cols-2 gap-1.5">
-            {(["red", "black"] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => patch({ severity: s })}
-                className={clsx(
-                  "py-2 rounded text-sm font-mono border transition-colors capitalize",
-                  inc.severity === s
-                    ? s === "black"
-                      ? "bg-ink/10 border-ink text-ink"
-                      : "bg-warn/10 border-warn text-warn"
-                    : "bg-panel2 border-grid text-muted hover:text-ink"
-                )}
-              >
-                {s}
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-1.5">
+            {(["red", "black"] as const).map((s) => {
+              const on = inc.severity === s;
+              const color = s === "black" ? "var(--text)" : "var(--poor)";
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => patch({ severity: s })}
+                  className="chip min-w-20 justify-center capitalize"
+                  aria-pressed={on}
+                  style={
+                    on
+                      ? {
+                          color,
+                          borderColor: `color-mix(in srgb, ${color} 60%, transparent)`,
+                          background: `color-mix(in srgb, ${color} 12%, transparent)`,
+                        }
+                      : undefined
+                  }
+                >
+                  {s}
+                </button>
+              );
+            })}
           </div>
         </Field>
         <Field label="Location">
           <select
-            className={sel}
+            className="input cursor-pointer"
             value={inc.offRoute}
             onChange={(e) => patch({ offRoute: e.target.value as OffRoute })}
           >
@@ -170,35 +215,29 @@ function IdentitySection({ inc }: { inc: IncidentState }) {
           </select>
         </Field>
       </div>
-      <Field label="Banner override">
-        <select
-          className={sel}
-          value={inc.bannerOverride}
-          onChange={(e) => patch({ bannerOverride: e.target.value })}
-        >
-          <option value="">Automatic (from phase)</option>
-          <option value="none">No banner</option>
-          {INCIDENT_BANNERS.map((b) => (
-            <option key={b.id} value={b.id}>{b.label}</option>
-          ))}
-        </select>
-      </Field>
-      <div className="flex gap-2 items-center">
-        <span className="font-mono uppercase tracking-widest text-muted text-xs">Register</span>
-        {(["full", "brief"] as const).map((r) => (
-          <Chip key={r} selected={inc.register === r} onClick={() => patch({ register: r })}>
-            {r === "full" ? "Full template" : "Brief"}
-          </Chip>
-        ))}
-        <div className="flex-1" />
-        <button
-          onClick={() => {
-            if (window.confirm("Close this incident? It moves to the closed list.")) closeIncident();
-          }}
-          className="px-3 py-1.5 rounded text-sm font-semibold bg-bad text-white border border-bad hover:opacity-85 transition-opacity"
-        >
-          Close incident
-        </button>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="Banner override">
+          <select
+            className="input cursor-pointer"
+            value={inc.bannerOverride}
+            onChange={(e) => patch({ bannerOverride: e.target.value })}
+          >
+            <option value="">Automatic (from phase)</option>
+            <option value="none">No banner</option>
+            {INCIDENT_BANNERS.map((b) => (
+              <option key={b.id} value={b.id}>{b.label}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Register">
+          <div className="flex flex-wrap gap-1.5">
+            {(["full", "brief"] as const).map((r) => (
+              <Chip key={r} selected={inc.register === r} onClick={() => patch({ register: r })}>
+                {r === "full" ? "Full template" : "Brief"}
+              </Chip>
+            ))}
+          </div>
+        </Field>
       </div>
     </Section>
   );
@@ -211,15 +250,15 @@ function DsfFields({ inc }: { inc: IncidentState }) {
   const setDsf = (k: keyof IncidentState["dsf"], v: string) =>
     patch({ dsf: { ...inc.dsf, [k]: v } });
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid gap-3 sm:grid-cols-3">
       <Field label="DSF trains">
-        <input className={inp} value={inc.dsf.trains} onChange={(e) => setDsf("trains", e.target.value)} placeholder="23" />
+        <input className="input font-mono" value={inc.dsf.trains} onChange={(e) => setDsf("trains", e.target.value)} placeholder="23" />
       </Field>
       <Field label="DSF minutes">
-        <input className={inp} value={inc.dsf.minutes} onChange={(e) => setDsf("minutes", e.target.value)} placeholder="170" />
+        <input className="input font-mono" value={inc.dsf.minutes} onChange={(e) => setDsf("minutes", e.target.value)} placeholder="170" />
       </Field>
       <Field label="Cancellations">
-        <input className={inp} value={inc.dsf.cancellations} onChange={(e) => setDsf("cancellations", e.target.value)} placeholder="3 part cancellations" />
+        <input className="input" value={inc.dsf.cancellations} onChange={(e) => setDsf("cancellations", e.target.value)} placeholder="3 part cancellations" />
       </Field>
     </div>
   );
@@ -337,10 +376,10 @@ function PhaseForm({ inc }: { inc: IncidentState }) {
       return (
         <>
           <Section title="Normal working resumed">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Time (XXXX → XX:XX)">
                 <input
-                  className={inp}
+                  className="input font-mono"
                   value={inc.nwr.time}
                   onChange={(e) => patch({ nwr: { ...inc.nwr, time: e.target.value } })}
                   placeholder="21:05"
@@ -353,21 +392,19 @@ function PhaseForm({ inc }: { inc: IncidentState }) {
               placeholder="Cause found, handback detail, follow-up inspections."
               minRows={3}
             />
-            <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={inc.nwr.contingencyWithdrawn}
                 onChange={(e) => patch({ nwr: { ...inc.nwr, contingencyWithdrawn: e.target.checked } })}
-                className="accent-accent w-3.5 h-3.5"
               />
               Contingency plan withdrawn
             </label>
-            <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={inc.nwr.recoveryToFollow}
                 onChange={(e) => patch({ nwr: { ...inc.nwr, recoveryToFollow: e.target.checked } })}
-                className="accent-accent w-3.5 h-3.5"
               />
               Service recovery update to follow post ITSR huddle
             </label>
@@ -391,11 +428,13 @@ function PhaseForm({ inc }: { inc: IncidentState }) {
           <Section title="Post incident service recovery">
             <AutoTextarea value={inc.recovery.postIncident} onChange={(v) => setRec("postIncident", v)} minRows={2} placeholder="Stock/crew displacement, next-day impact." />
           </Section>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="Next review (HH:MM)">
-              <input className={inp} value={inc.recovery.nextReview} onChange={(e) => setRec("nextReview", e.target.value)} placeholder="16:30" />
-            </Field>
-          </div>
+          <Section title="Next review">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Next review (HH:MM)">
+                <input className="input font-mono" value={inc.recovery.nextReview} onChange={(e) => setRec("nextReview", e.target.value)} placeholder="16:30" />
+              </Field>
+            </div>
+          </Section>
           <Section title="Additional note">
             <AutoTextarea value={inc.recovery.note} onChange={(v) => setRec("note", v)} minRows={2} placeholder="" />
           </Section>
@@ -421,41 +460,54 @@ export default function IncidentTab() {
 
   if (!hydrated) return null;
 
+  const openCount = incidents.filter((i) => i.phase !== "closed").length;
+
   return (
-    <div className="flex flex-col gap-4" style={{ minHeight: "calc(100vh - 130px)" }}>
-      <IncidentRail />
-
-      {!inc && (
-        <div className="flex flex-col items-start gap-3 pt-8">
-          <p className="text-muted">
-            No incidents on the go. Start one and send a holding message within seconds —
-            everything you enter carries forward through the whole messaging cycle.
-          </p>
-          <button
-            onClick={createIncident}
-            className="px-4 py-2.5 rounded font-semibold bg-accent text-white border border-accent/80 hover:bg-accent-dim transition-colors"
-          >
-            + New incident
+    <>
+      <TabHeader
+        tab="incident"
+        badge={openCount > 0 ? <Badge color="var(--poor)" dot>{openCount} open</Badge> : undefined}
+        actions={
+          <button type="button" onClick={createIncident} className="btn btn-primary">
+            <Plus size={15} /> New incident
           </button>
-        </div>
-      )}
+        }
+      />
+      <div className="stagger flex flex-col gap-4">
+        <IncidentRail />
 
-      {inc && inc.phase === "closed" && (
-        <p className="text-muted pt-4">
-          This incident is closed — reopen it from the rail above to send further messages.
-        </p>
-      )}
+        {!inc && (
+          <Card>
+            <EmptyState
+              icon={Siren}
+              title="No incidents on the go"
+              hint="Start one and send a holding message within seconds — everything you enter carries forward through the whole messaging cycle."
+              action={
+                <button type="button" onClick={createIncident} className="btn btn-primary">
+                  <Plus size={15} /> New incident
+                </button>
+              }
+            />
+          </Card>
+        )}
 
-      {inc && inc.phase !== "closed" && (
-        <>
-          <PhaseStepper inc={inc} />
-          {/* Preview + copy live in the left rail, like every other tab. */}
-          <div className="flex flex-col gap-4 w-full max-w-3xl">
+        {inc && inc.phase === "closed" && (
+          <Card>
+            <p className="text-sm text-dim">
+              This incident is closed — reopen it from the rail above to send further messages.
+            </p>
+          </Card>
+        )}
+
+        {inc && inc.phase !== "closed" && (
+          <>
+            <PhaseStepper inc={inc} />
+            {/* Preview + copy live in the right-hand panel, like every other tab. */}
             <IdentitySection inc={inc} />
             <PhaseForm inc={inc} />
-          </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </div>
+    </>
   );
 }

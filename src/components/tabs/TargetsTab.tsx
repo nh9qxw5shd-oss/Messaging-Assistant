@@ -11,9 +11,9 @@ import {
 } from "@/lib/supabase";
 import { listPeriodOptions } from "@/lib/railwayCalendar";
 import type { TargetPeriod } from "@/lib/types";
-import clsx from "clsx";
-
-const btnCls = "px-3 py-2 rounded font-semibold border transition-colors";
+import { CalendarCheck, Plus, RefreshCw, Save } from "lucide-react";
+import TabHeader from "@/components/TabHeader";
+import { Card, Field } from "@/components/ui";
 
 export default function TargetsTab() {
   const {
@@ -122,77 +122,80 @@ export default function TargetsTab() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h3 className="font-display font-semibold text-base text-ink mb-1">Targets & Thresholds</h3>
-        <p className="text-muted">Edit target/direction here — changes propagate to all performance tables. The amber threshold is auto-calculated: 5% below target for higher-is-better metrics (Route/EMR/XC/GTR T3), 0.5% above target for lower-is-better metrics (EMR Cancellations). Value and notes are per-section.</p>
-      </div>
-
-      {/* Supabase target periods */}
-      {supabaseReady && (
-        <div className="rounded border border-grid bg-panel2 p-4 flex flex-col gap-3">
-          <h4 className="font-sans font-semibold text-ink/80 mb-0">Target Periods</h4>
-          <p className="text-muted text-sm mb-0">
-            The railway period containing today is selected automatically on load.
-            Pick a future period to enter its targets ahead of time — it will be
-            auto-selected once its dates arrive.
-          </p>
-
-          <div className="flex gap-2 flex-wrap">
-            <select
-              value={activeTargetPeriodId ?? ""}
-              onChange={(e) => handlePeriodChange(e.target.value)}
-              className="flex-1 min-w-0 rounded bg-panel border border-grid px-3 py-2 text-ink focus:outline-none focus:border-accent"
-            >
-              <option value="">— Select period —</option>
-              <optgroup label="Railway periods (past 3 → next 15 months)">
-                {calendarOptions.map((o) => {
-                  const row = periodByName.get(o.name);
-                  return (
-                    <option key={o.name} value={row?.id ?? `new:${o.name}`}>
-                      {o.label}{o.isCurrent ? " — current" : ""}
-                    </option>
-                  );
-                })}
-              </optgroup>
-              {legacyPeriods.length > 0 && (
-                <optgroup label="Other periods">
-                  {legacyPeriods.map((p) => (
-                    <option key={p.id} value={p.id}>{p.period_name}</option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-            <button onClick={loadPeriods} disabled={loading} className={clsx(btnCls, "bg-panel border-grid text-ink hover:border-accent/50")}>
-              Refresh
-            </button>
-          </div>
-
-          <div className="flex gap-2 flex-wrap">
-            <button onClick={handleAutoSelect} disabled={loading} className={clsx(btnCls, "bg-panel border-grid text-ink hover:border-accent/50 disabled:opacity-40")}>
-              Back to current period
-            </button>
-            <button onClick={handleSaveToSupabase} disabled={!activeTargetPeriodId || loading} className={clsx(btnCls, "bg-accent text-white border-accent/80 hover:bg-accent-dim disabled:opacity-40 shadow-orange-glow-sm")}>
-              Save targets to Supabase
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Targets table */}
-      <PerfTable
-        metrics={targets}
-        locked={false}
-        onUpdate={updateTarget}
-        onRemove={removeTarget}
+    <>
+      <TabHeader
+        tab="targets"
+        subtitle="Edit targets and direction here; changes flow to every performance table. Value and notes stay per message."
       />
 
-      {/* Table actions */}
-      <div className="flex gap-2 flex-wrap">
-        <button onClick={addTarget} className={clsx(btnCls, "bg-panel border-grid text-ink hover:border-accent/50")}>
-          + Add metric
-        </button>
+      <div className="stagger flex flex-col gap-4">
+        {/* Supabase target periods */}
+        {supabaseReady && (
+          <Card
+            title="Target period"
+            subtitle="The railway period containing today is selected on load. Pick a future period to enter its targets ahead of time; it is selected automatically once its dates arrive."
+            action={
+              <button type="button" onClick={loadPeriods} disabled={loading} className="btn btn-ghost btn-sm" title="Reload the period list">
+                {loading ? <span className="spinner" /> : <RefreshCw size={13} />} Refresh
+              </button>
+            }
+          >
+            <div className="flex flex-wrap items-end gap-2">
+              <Field label="Period" className="min-w-0 flex-1 basis-64">
+                <select
+                  value={activeTargetPeriodId ?? ""}
+                  onChange={(e) => handlePeriodChange(e.target.value)}
+                  className="input cursor-pointer"
+                >
+                  <option value="">— Select period —</option>
+                  <optgroup label="Railway periods (past 3 → next 15 months)">
+                    {calendarOptions.map((o) => {
+                      const row = periodByName.get(o.name);
+                      return (
+                        <option key={o.name} value={row?.id ?? `new:${o.name}`}>
+                          {o.label}{o.isCurrent ? " — current" : ""}
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+                  {legacyPeriods.length > 0 && (
+                    <optgroup label="Other periods">
+                      {legacyPeriods.map((p) => (
+                        <option key={p.id} value={p.id}>{p.period_name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              </Field>
+              <button type="button" onClick={handleAutoSelect} disabled={loading} className="btn">
+                <CalendarCheck size={15} /> Back to current period
+              </button>
+              <button type="button" onClick={handleSaveToSupabase} disabled={!activeTargetPeriodId || loading} className="btn btn-primary">
+                <Save size={15} /> Save targets to Supabase
+              </button>
+            </div>
+          </Card>
+        )}
+
+        {/* Targets table */}
+        <Card
+          title="Metrics"
+          subtitle="Amber is auto-calculated: 5% below target for higher-is-better metrics (Route / EMR / XC / GTR T3), 0.5% above target for lower-is-better metrics (EMR cancellations)."
+          padded={false}
+          action={
+            <button type="button" onClick={addTarget} className="btn btn-sm">
+              <Plus size={14} /> Add metric
+            </button>
+          }
+        >
+          <PerfTable
+            metrics={targets}
+            locked={false}
+            onUpdate={updateTarget}
+            onRemove={removeTarget}
+          />
+        </Card>
       </div>
-    </div>
+    </>
   );
 }

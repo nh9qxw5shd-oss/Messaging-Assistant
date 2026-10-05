@@ -20,21 +20,14 @@ export default function EmojiTray() {
   }
 
   return (
-    <div className="grid grid-cols-6 gap-1.5">
+    <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-9 xl:grid-cols-6">
       {EMOJI_TRAY.map((ch) => (
         <button
           key={ch}
+          type="button"
           onClick={() => copy(ch)}
           title="Click to copy"
-          className="
-            flex items-center justify-center
-            rounded border border-grid bg-panel2
-            py-2 text-lg leading-none
-            hover:border-accent/50 hover:bg-panel
-            transition-colors duration-100
-            font-[emoji] cursor-pointer
-          "
-          style={{ fontFamily: '"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui' }}
+          className="emoji flex h-10 items-center justify-center rounded-lg border border-edge bg-sunken text-lg leading-none transition-colors hover:border-accent hover:bg-hover"
         >
           {ch}
         </button>

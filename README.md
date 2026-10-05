@@ -6,9 +6,22 @@ Operational messaging tool for the East Midlands Control Centre. Builds structur
 
 - **Next.js 14** (App Router) — Vercel-hosted
 - **TypeScript** (strict)
-- **Tailwind CSS** — Insight design system
+- **Tailwind CSS v4** — the house design language shared with Autumn Hub and the Engineering Hub (see below)
 - **Zustand** — client state + localStorage persistence
 - **Supabase** — target periods and seasonal templates (optional; graceful fallback to defaults)
+
+---
+
+## Layout and design
+
+The app uses the house design language (Autumn Hub): the token set and component stylesheet in `src/app/globals.css`, the UI kit in `src/components/ui.tsx`, toasts and confirm dialogs in `src/components/uiFeedback.tsx`, Manrope and JetBrains Mono bundled as local fonts, and a dark theme with a light option in the top bar (remembered per browser).
+
+- **One URL.** The sidebar lists the messages, grouped Scheduled / As required / Settings. Choosing one switches the active tab in the store; nothing routes. On a phone the sidebar folds into the menu button.
+- **Top bar.** Command palette (Ctrl+K: jump to a message, build, build and copy, switch theme), Supabase status, time of the last local autosave, the London clock and the theme toggle.
+- **Composer.** Sits in a sticky panel on the right on wide screens and below the form on smaller ones: banner, built message, Build and Copy, then the emoji tray. Ctrl+Enter builds from anywhere. The incident tab shows its own preview there instead, and Targets uses the full width.
+- **Forms.** Each section is a card. Section controls (Auto / Manual, Refresh, fills, templates) sit in the card header, and their status shows as coloured text under the title.
+
+The stylesheet and kit are copies kept in step by hand with Autumn Hub; there is no runtime dependency on that repo.
 
 ---
 
