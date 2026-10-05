@@ -38,7 +38,7 @@ function serviceDescriptor(state: SafetyIncidentState): string {
 
 // ─── Severity trigger — identified header (§1.3) ──────────────────────────────
 
-function hasIdentifiedHeader(state: SafetyIncidentState): boolean {
+function useIdentifiedHeader(state: SafetyIncidentState): boolean {
   if (state.headerOverride) return true;
   const { category, subCategory } = state;
   if (category === "spad") return true;
@@ -64,7 +64,7 @@ function buildHeader(state: SafetyIncidentState): string {
   // Update suffix
   const updateSuffix = (statusType === "update" || statusType === "6hour") ? " Update" : "";
 
-  if (hasIdentifiedHeader(state)) {
+  if (useIdentifiedHeader(state)) {
     // Identified header format
     const catDef = getCategoryDef(category);
     const subDef = getSubcategoryDef(category, subCategory);
