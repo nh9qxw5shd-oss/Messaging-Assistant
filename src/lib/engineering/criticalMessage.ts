@@ -6,14 +6,23 @@
 // section must say the same thing.
 //
 // Slots are the Messaging Assistant's: 05:30 start of service, 09:00 / 15:00 /
-// 22:00 tactical. For a slot the section lists, in start order:
+// 22:00 tactical. On a weekday a slot's section lists:
 //   - items still active (taken / behind schedule / overrun / partially achieved)
 //   - items due to start before the next message (for 22:00: tonight's works)
 //   - items concluded since the previous message (the 05:30 outcomes)
 //   - items whose planned window overlapped the last period with no status
 //     update, flagged "no update received"
-// so weekend and multi-night works carry through every message until they
-// conclude, and a concluded item is reported exactly once.
+// so multi-night works carry through every message until they conclude, and a
+// concluded item is reported exactly once.
+//
+// Weekends run as one running list: from the Friday 22:00 message to the
+// Monday 05:30 message every item on the Friday, Saturday and Sunday nights is
+// listed in every message, whatever its status, so the whole weekend picture
+// stays visible until Monday morning.
+//
+// Items are listed in status order: not yet taken, ongoing, cancelled, overrun,
+// behind schedule, partially achieved, complete, handed back early; then by
+// start time and item number.
 
 export type CriticalStatus =
   | "not_yet_taken"
@@ -44,6 +53,25 @@ export function isCriticalStatus(s: string): s is CriticalStatus {
   return (CRITICAL_STATUSES as string[]).includes(s);
 }
 
+/** Display and message order: what needs attention first, settled outcomes last. */
+export const STATUS_ORDER: CriticalStatus[] = [
+  "not_yet_taken", "ongoing", "cancelled", "overrun", "behind_schedule", "partially_achieved", "complete", "handed_back_early",
+];
+
+export function statusRank(status: string): number {
+  const i = STATUS_ORDER.indexOf(isCriticalStatus(status) ? status : "not_yet_taken");
+  return i === -1 ? 0 : i;
+}
+
+type Sortable = { status: string; start_at: string | null; item_no: number | null };
+
+/** Status order, then start time, then item number. */
+export function compareByStatus(a: Sortable, b: Sortable): number {
+  return statusRank(a.status) - statusRank(b.status)
+    || (ms(a.start_at) ?? Number.MAX_SAFE_INTEGER) - (ms(b.start_at) ?? Number.MAX_SAFE_INTEGER)
+    || (a.item_no ?? 0) - (b.item_no ?? 0);
+}
+
 /** The columns of eng_critical_items the message logic needs. */
 export interface CriticalItemLite {
   id: string;
@@ -69,6 +97,7 @@ export const MESSAGE_SLOTS: MessageSlot[] = ["0530", "0900", "1500", "2200"];
 
 const SLOT_MINUTES: Record<MessageSlot, number> = { "0530": 330, "0900": 540, "1500": 900, "2200": 1320 };
 const DAY_MS = 86_400_000;
+const HOUR_MS = 3_600_000;
 
 // ─── London wall clock ──────────────────────────────────────────────────────
 
@@ -123,6 +152,37 @@ export function nextSlotWindow(now: Date = new Date()): SlotWindow {
   return slot ? slotWindow(slot, dateISO) : slotWindow("0530", addDaysISO(dateISO, 1));
 }
 
+/** Day of week of a London date: 0 Sunday … 6 Saturday. */
+function weekday(dateISO: string): number {
+  return new Date(Date.parse(dateISO + "T12:00:00Z")).getUTCDay();
+}
+
+/** The London date a possession belongs to: its start minus six hours, so a 00:45 Sunday start is Saturday night. */
+export function nightDateOf(item: { start_at: string | null }): string | null {
+  const t = ms(item.start_at);
+  return t === null ? null : londonParts(new Date(t - 6 * HOUR_MS)).dateISO;
+}
+
+/** The weekend's three nights (Friday, Saturday, Sunday) if a London night date falls on one. */
+export function weekendNightsFor(nightISO: string): { friday: string; nights: string[] } | null {
+  const back = { 5: 0, 6: 1, 0: 2 }[weekday(nightISO) as 0 | 5 | 6];
+  if (back === undefined) return null;
+  const friday = addDaysISO(nightISO, -back);
+  return { friday, nights: [friday, addDaysISO(friday, 1), addDaysISO(friday, 2)] };
+}
+
+/**
+ * The weekend running list a message belongs to: the Friday 22:00 message
+ * through the Monday 05:30 message. Null on weekdays.
+ */
+export function weekendForWindow(w: SlotWindow): { friday: string; nights: string[] } | null {
+  const day = weekday(w.dateISO);
+  if (day === 5) return w.slot === "2200" ? weekendNightsFor(w.dateISO) : null;
+  if (day === 6 || day === 0) return weekendNightsFor(w.dateISO);
+  if (day === 1 && w.slot === "0530") return weekendNightsFor(addDaysISO(w.dateISO, -1));
+  return null;
+}
+
 /** The tactical slot to default to right now: 09:00, 15:00 or 22:00 (after 22:00 stays on 22:00). */
 export function defaultTacticalSlot(now: Date = new Date()): Exclude<MessageSlot, "0530"> {
   const w = nextSlotWindow(now);
@@ -138,12 +198,18 @@ export interface SelectedItem {
   reason: SelectionReason;
 }
 
-const HOUR_MS = 3_600_000;
 
 function ms(iso: string | null): number | null {
   if (!iso) return null;
   const t = Date.parse(iso);
   return Number.isNaN(t) ? null : t;
+}
+
+/** Why a not-yet-taken item is listed: due before the next message, or overdue with no update. */
+function pendingReason(start: number | null, end: number | null, at: number, prev: number, next: number): SelectionReason | null {
+  if (start !== null && start >= at - HOUR_MS && start < next + HOUR_MS) return "due";
+  if (start !== null && start < at - HOUR_MS && (end === null || end > prev - HOUR_MS)) return "no_update";
+  return null;
 }
 
 /**
@@ -155,6 +221,7 @@ export function selectItemsForSlot(items: CriticalItemLite[], w: SlotWindow): Se
   const at = w.at.getTime();
   const prev = w.prev.getTime();
   const next = w.next.getTime();
+  const weekend = weekendForWindow(w);
   const out: SelectedItem[] = [];
   for (const item of items) {
     if (!item.include_in_messages) continue;
@@ -164,6 +231,15 @@ export function selectItemsForSlot(items: CriticalItemLite[], w: SlotWindow): Se
     const end = ms(item.end_at);
     const concluded = ms(item.concluded_at) ?? (meta.concluded ? ms(item.status_at) : null);
 
+    // Weekend running list: every Friday / Saturday / Sunday night item, every message.
+    const night = nightDateOf(item);
+    if (weekend && night && weekend.nights.includes(night)) {
+      if (meta.concluded) out.push({ item, reason: "concluded" });
+      else if (meta.active) out.push({ item, reason: "active" });
+      else out.push({ item, reason: start !== null && start < at - HOUR_MS && end !== null && end < at ? "no_update" : pendingReason(start, end, at, prev, next) ?? "due" });
+      continue;
+    }
+
     if (meta.concluded) {
       // Report an outcome once: in the first message after it was recorded. Fall
       // back to the planned end time when the conclusion was never time-stamped.
@@ -172,11 +248,10 @@ export function selectItemsForSlot(items: CriticalItemLite[], w: SlotWindow): Se
       continue;
     }
     if (meta.active) { out.push({ item, reason: "active" }); continue; }
-    // not_yet_taken
-    if (start !== null && start >= at - HOUR_MS && start < next + HOUR_MS) { out.push({ item, reason: "due" }); continue; }
-    if (start !== null && start < at - HOUR_MS && (end === null || end > prev - HOUR_MS)) { out.push({ item, reason: "no_update" }); continue; }
+    const reason = pendingReason(start, end, at, prev, next);
+    if (reason) out.push({ item, reason });
   }
-  out.sort((a, b) => (ms(a.item.start_at) ?? 0) - (ms(b.item.start_at) ?? 0) || (a.item.item_no ?? 0) - (b.item.item_no ?? 0));
+  out.sort((a, b) => compareByStatus(a.item, b.item));
   return out;
 }
 
@@ -233,34 +308,23 @@ export function formatItem(item: CriticalItemLite, reason: SelectionReason = "du
   return lines.join("\n");
 }
 
-/** Body text of the engineering section for a slot (no heading). */
-export function renderEngineeringSection(selected: SelectedItem[], slot: MessageSlot): string {
+/**
+ * Body text of the engineering section for a slot (no heading): one list in
+ * status order. A weekend message opens with a line saying it is the running
+ * list.
+ */
+export function renderEngineeringSection(selected: SelectedItem[], slot: MessageSlot, weekend = false): string {
   if (!selected.length) {
+    if (weekend) return "No critical engineering works this weekend.";
     return slot === "2200" ? "No critical engineering works tonight." : slot === "0530" ? "No critical engineering works overnight." : "No critical engineering works ongoing.";
   }
-  const active = selected.filter((s) => s.reason === "active" || s.reason === "no_update");
-  const due = selected.filter((s) => s.reason === "due");
-  const concluded = selected.filter((s) => s.reason === "concluded");
-  const parts: string[] = [];
-  const block = (title: string | null, list: SelectedItem[]) => {
-    if (!list.length) return;
-    const body = list.map((s) => formatItem(s.item, s.reason)).join("\n\n");
-    parts.push(title ? `${title}\n${body}` : body);
-  };
-  if (slot === "0530") {
-    block(null, concluded);
-    block(active.length && concluded.length ? "_Still ongoing_" : null, active);
-    block(due.length && (concluded.length || active.length) ? "_Due today_" : null, due);
-  } else {
-    block(null, active);
-    block(due.length && active.length ? (slot === "2200" ? "_Due tonight_" : "_Due before the next update_") : null, due);
-    block(concluded.length && (active.length || due.length) ? "_Concluded since last update_" : null, concluded);
-  }
-  return parts.join("\n\n");
+  const sorted = [...selected].sort((a, b) => compareByStatus(a.item, b.item));
+  const body = sorted.map((s) => formatItem(s.item, s.reason)).join("\n\n");
+  return weekend ? `_Weekend running list until 05:30 Monday_\n\n${body}` : body;
 }
 
 /** Convenience: select + render for a slot. */
 export function buildEngineeringSection(items: CriticalItemLite[], w: SlotWindow): { text: string; selected: SelectedItem[] } {
   const selected = selectItemsForSlot(items, w);
-  return { text: renderEngineeringSection(selected, w.slot), selected };
+  return { text: renderEngineeringSection(selected, w.slot, weekendForWindow(w) !== null), selected };
 }

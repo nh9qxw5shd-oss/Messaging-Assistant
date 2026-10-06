@@ -159,14 +159,16 @@ Both engineering fields — **Critical Engineering** on the Tactical tab and **E
 
 ### Selection rule
 
-`src/lib/engineering/engineeringHub.ts` reads only the columns the message needs (rows starting within −4 / +3 days of the message time, plus anything still active regardless of date, plus anything concluded in the last day) and hands them to the shared logic. For a slot the section lists, in start order:
+`src/lib/engineering/engineeringHub.ts` reads only the columns the message needs (rows starting within −4 / +3 days of the message time, plus anything still active regardless of date, plus anything concluded in the last day) and hands them to the shared logic. On a weekday a slot's section lists:
 
 - items still active (taken / behind schedule / overrun / partially achieved);
 - items due to start before the next message (for 22:00: tonight's works);
 - items concluded since the previous message (the 05:30 outcomes) — each reported exactly once;
 - items whose planned window overlapped the last period with no status update, flagged "no update received".
 
-So weekend and multi-night works carry through every message until they conclude. Items the Hub marks "exclude from messages" are skipped.
+**Weekends run as one running list:** from the Friday 22:00 message to the Monday 05:30 message every item on the Friday, Saturday and Sunday nights is listed in every message whatever its status, under the line `_Weekend running list until 05:30 Monday_`, so the whole weekend picture stays visible until Monday morning.
+
+Items are listed as one list in **status order** — not yet taken, ongoing, cancelled, overrun, behind schedule, partially achieved, complete, handed back early — then by start time. Multi-night works carry through every message until they conclude. Items the Hub marks "exclude from messages" are skipped.
 
 ### Shared logic — keep identical
 
