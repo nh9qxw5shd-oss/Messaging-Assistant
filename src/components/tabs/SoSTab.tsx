@@ -139,6 +139,8 @@ export default function SoSTab() {
     if (esrAutoRan.current) return;
     esrAutoRan.current = true;
     fillEsrFromDlog(true);
+    // Run once on mount only; later fills are manual.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function setSoSEsrAll(esr: Esr) {
