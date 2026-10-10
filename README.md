@@ -47,7 +47,7 @@ cp .env.local.example .env.local
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
-| `NEXT_PUBLIC_APP_URL` | Absolute URL of the deployed app (for Teams banner images) |
+| `NEXT_PUBLIC_APP_URL` | Origin of the deployed app, e.g. `https://messaging.derbycontrol.co.uk` (for Teams banner images; the `/messaging` base path is added) |
 | `RDM_API_KEY` | Rail Data Marketplace consumer key for the live performance feed (server-side only) |
 | `RDM_API_BASE` | Optional override of the RDM data product base URL |
 
@@ -79,7 +79,7 @@ Drop your banner PNG files into `public/banners/`:
 | `strategic.png` | Strategic AM and PM |
 | `tactical.png` | Tactical (SoTN) |
 
-These are served as static assets. For Teams rich copy to work correctly, set `NEXT_PUBLIC_APP_URL` to your Vercel deployment URL so the `<img src>` is absolute.
+These are served as static assets. For Teams rich copy to work correctly, set `NEXT_PUBLIC_APP_URL` to the app's origin so the `<img src>` is absolute; `src/lib/basePath.ts` adds the base path.
 
 ### 5. Run locally
 

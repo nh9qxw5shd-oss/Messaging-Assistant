@@ -1,4 +1,5 @@
 import type { IncidentState } from "./types";
+import { absoluteAsset } from "../basePath";
 import {
   STRATEGIC_PRIORITY_GROUPS,
   normaliseTime,
@@ -201,9 +202,10 @@ export function renderIncident(inc: IncidentState): string {
 export function buildIncidentHtml(inc: IncidentState, plainText: string): string {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const banner = resolveBanner(inc);
+  const bannerSrc = banner ? absoluteAsset(appUrl, banner.path) : "";
   const bannerHtml =
-    appUrl && banner
-      ? `<img src="${appUrl}${banner.path}" alt="Banner" style="max-width:100%;height:auto;display:block;margin:0 0 8px 0;"><hr style="border:none;border-top:1px solid #ddd;margin:8px 0;">`
+    bannerSrc
+      ? `<img src="${bannerSrc}" alt="Banner" style="max-width:100%;height:auto;display:block;margin:0 0 8px 0;"><hr style="border:none;border-top:1px solid #ddd;margin:8px 0;">`
       : "";
   return `${bannerHtml}${plainText.replace(/\n/g, "<br>")}`;
 }

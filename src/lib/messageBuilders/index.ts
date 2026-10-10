@@ -1,4 +1,5 @@
 import type { TabKey } from "../types";
+import { absoluteAsset } from "../basePath";
 import type { AppStore } from "../store";
 import { buildSoS } from "./buildSoS";
 import { buildStrategicAM } from "./buildStrategicAM";
@@ -38,9 +39,10 @@ export function buildTeamsHtml(
     tactical:     "/banners/tactical.png",
   };
   const bannerPath = bannerMap[activeTab];
+  const bannerSrc = bannerPath ? absoluteAsset(appUrl, bannerPath) : "";
   const bannerHtml =
-    appUrl && bannerPath
-      ? `<img src="${appUrl}${bannerPath}" alt="Banner" style="max-width:100%;height:auto;display:block;margin:0 0 8px 0;"><hr style="border:none;border-top:1px solid #ddd;margin:8px 0;">`
+    bannerSrc
+      ? `<img src="${bannerSrc}" alt="Banner" style="max-width:100%;height:auto;display:block;margin:0 0 8px 0;"><hr style="border:none;border-top:1px solid #ddd;margin:8px 0;">`
       : "";
 
   const body = plainText.replace(/\n/g, "<br>");

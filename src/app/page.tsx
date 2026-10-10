@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useStore } from "@/lib/store";
+import { NAV_ITEMS } from "@/lib/nav";
 import {
   autoSelectCurrentPeriod,
   fetchSeasonalTemplates,
@@ -46,12 +47,24 @@ export default function Page() {
     backupNow,
     theme,
     activeTab,
+    setActiveTab,
   } = useStore();
 
   // ─── Hydrate session state from localStorage ─────────────────────────────
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  // ─── Deep link: ?tab=<key> (the hub's cadence links) wins over the saved tab
+  // once, then leaves the URL so a reload keeps the controller's own choice.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const tab = url.searchParams.get("tab");
+    if (!tab) return;
+    if (NAV_ITEMS.some((n) => n.tab === tab)) setActiveTab(tab as TabKey);
+    url.searchParams.delete("tab");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+  }, [setActiveTab]);
 
   // ─── Apply theme to <html> (tokens switch on data-theme) ─────────────────
   useEffect(() => {

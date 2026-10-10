@@ -1,6 +1,7 @@
 "use client";
 import { BANNER_FILES } from "@/lib/constants";
 import type { TabKey } from "@/lib/types";
+import { withBase } from "@/lib/basePath";
 
 export default function BannerPreview({ activeTab }: { activeTab: TabKey }) {
   const src = BANNER_FILES[activeTab];
@@ -8,7 +9,7 @@ export default function BannerPreview({ activeTab }: { activeTab: TabKey }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      src={withBase(src)}
       alt="Message banner"
       className="block h-auto w-full rounded-md"
       onError={(e) => {

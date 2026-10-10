@@ -1,6 +1,7 @@
 "use client";
 import { useStore } from "../store";
 import { POLL_INTERVAL_MS, type LivePerfResponse } from "./config";
+import { withBase } from "../basePath";
 
 // ─── Live performance polling controller ─────────────────────────────────────
 //
@@ -18,7 +19,7 @@ export async function refreshLivePerf(): Promise<void> {
   inFlight = true;
   setLivePerf({ status: "loading" });
   try {
-    const res = await fetch("/api/performance");
+    const res = await fetch(withBase("/api/performance"));
     if (!res.ok) {
       const body = (await res.json().catch(() => null)) as { error?: string } | null;
       throw new Error(body?.error ?? `HTTP ${res.status}`);

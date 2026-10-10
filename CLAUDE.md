@@ -14,6 +14,11 @@ the tactical (09:00 / 15:00 / 22:00) and SoS (05:30) WhatsApp messages.
 - The tactical slot follows the London clock, with a manual override that an "Auto"
   button re-engages. A customised intro is never overwritten; auto text only replaces
   a blank field or the last auto-filled text.
+- Mounted on the Derby Control hub (PotatOS) at `overseer.derbycontrol.co.uk/messaging`, which
+  proxies `/messaging/*` here. `basePath` is `/messaging` (`next.config.mjs`) on the standalone
+  hostname too; its root and `/banners/*` redirect under the prefix. `<Link>` and the router add
+  the prefix themselves; a hand-built URL does not, so `fetch("/api/...")`, `<img src>` and
+  absolute Teams banner URLs go through `src/lib/basePath.ts`.
 
 ## Design language: Autumn Hub (default for every rebuild and new system)
 

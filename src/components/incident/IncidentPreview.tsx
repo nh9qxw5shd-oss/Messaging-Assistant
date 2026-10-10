@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { useIncidentStore } from "@/lib/incident/store";
 import { renderIncident, buildIncidentHtml } from "@/lib/incident/render";
+import { withBase } from "@/lib/basePath";
 import { resolveBanner, PHASE_LABELS } from "@/lib/incident/constants";
 import { ChevronDown, ChevronRight, ClipboardCopy, ImagePlus, Siren } from "lucide-react";
 import { Card, EmptyState } from "@/components/ui";
@@ -104,7 +105,7 @@ export default function IncidentPreview() {
           <div className="border-b border-edge bg-sunken px-4 py-3">
             <div className="overflow-hidden rounded-lg border border-edge">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={banner.path} alt={banner.label} className="block h-auto w-full" />
+              <img src={withBase(banner.path)} alt={banner.label} className="block h-auto w-full" />
             </div>
           </div>
         )}

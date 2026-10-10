@@ -9,7 +9,7 @@ const jetbrains = localFont({ src: "./fonts/jetbrains-mono.woff2", variable: "--
 export const metadata: Metadata = {
   title: "Messaging Assistant — East Midlands Route",
   description: "Operational messaging tool for the East Midlands Control Centre.",
-  icons: { icon: "/favicon.svg" },
+  icons: { icon: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/favicon.svg` },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
