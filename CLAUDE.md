@@ -4,7 +4,9 @@ Next.js App Router, TypeScript, Supabase (shared "Mini Project Hub" project). Bu
 the tactical (09:00 / 15:00 / 22:00) and SoS (05:30) WhatsApp messages.
 
 ## Working here
-- Check before any push: `npm run build`.
+- Checks before any push: `npm run lint`, `npm run type-check`, `npm test`
+  (`node --test`, so relative imports of runtime code carry the `.ts` suffix),
+  `npm run build`.
 - The critical engineering sections are filled from the Engineering Hub (the rebuilt
   WON Splitter) through `eng_critical_items`. `src/lib/engineering/criticalMessage.ts`
   is a verbatim copy of the Hub's `src/lib/critical/criticalMessage.ts` and must stay

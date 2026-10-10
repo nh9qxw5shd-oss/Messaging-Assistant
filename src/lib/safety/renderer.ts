@@ -1,5 +1,5 @@
 import type { SafetyIncidentState } from "./types";
-import { INCIDENT_CATEGORIES, ACTION_CHIPS } from "./constants";
+import { INCIDENT_CATEGORIES, ACTION_CHIPS } from "./constants.ts";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ function serviceDescriptor(state: SafetyIncidentState): string {
 
 // ─── Severity trigger — identified header (§1.3) ──────────────────────────────
 
-function useIdentifiedHeader(state: SafetyIncidentState): boolean {
+function wantsIdentifiedHeader(state: SafetyIncidentState): boolean {
   if (state.headerOverride) return true;
   const { category, subCategory } = state;
   if (category === "spad") return true;
@@ -64,7 +64,7 @@ function buildHeader(state: SafetyIncidentState): string {
   // Update suffix
   const updateSuffix = (statusType === "update" || statusType === "6hour") ? " Update" : "";
 
-  if (useIdentifiedHeader(state)) {
+  if (wantsIdentifiedHeader(state)) {
     // Identified header format
     const catDef = getCategoryDef(category);
     const subDef = getSubcategoryDef(category, subCategory);

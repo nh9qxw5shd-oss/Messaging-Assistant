@@ -1,9 +1,11 @@
-import { renderSafetyMessage } from "../renderer";
-import type { SafetyIncidentState } from "../types";
+import { describe, test } from "node:test";
+import assert from "node:assert/strict";
+import { renderSafetyMessage } from "../renderer.ts";
+import type { SafetyIncidentState } from "../types.ts";
 import * as fs from "fs";
 import * as path from "path";
 
-const FIXTURES_DIR = path.join(__dirname, "../../../../../docs/safety-message-builder/examples");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../../../../docs/safety-message-builder/examples");
 
 interface Fixture {
   description: string;
@@ -25,7 +27,7 @@ describe("Safety message renderer — fixture tests", () => {
 
     test(`${file}: ${fixture.description}`, () => {
       const rendered = renderSafetyMessage(fixture.input);
-      expect(normalise(rendered)).toBe(normalise(fixture.expected));
+      assert.equal(normalise(rendered), normalise(fixture.expected));
     });
   }
 });
