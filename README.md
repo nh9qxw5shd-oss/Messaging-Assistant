@@ -168,7 +168,7 @@ Both engineering fields — **Critical Engineering** on the Tactical tab and **E
 
 **Weekends run as one running list:** from the Friday 22:00 message to the Monday 05:30 message every item on the Friday, Saturday and Sunday nights is listed in every message whatever its status, under the line `_Weekend running list until 05:30 Monday_`, so the whole weekend picture stays visible until Monday morning.
 
-Items are listed as one list in **status order** — not yet taken, ongoing, cancelled, overrun, behind schedule, partially achieved, complete, handed back early — then by start time. Multi-night works carry through every message until they conclude. Items the Hub marks "exclude from messages" are skipped.
+Items are listed as one list in **time order** (start time, then item number) and do not move when their status changes. Multi-night works carry through every message until they conclude. Items the Hub marks "exclude from messages" are skipped.
 
 ### Shared logic — keep identical
 

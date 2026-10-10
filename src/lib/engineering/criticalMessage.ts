@@ -20,9 +20,8 @@
 // listed in every message, whatever its status, so the whole weekend picture
 // stays visible until Monday morning.
 //
-// Items are listed in status order: not yet taken, ongoing, cancelled, overrun,
-// behind schedule, partially achieved, complete, handed back early; then by
-// start time and item number.
+// Items are listed in time order (start time, then item number) and never move
+// when their status changes.
 
 export type CriticalStatus =
   | "not_yet_taken"
@@ -53,22 +52,16 @@ export function isCriticalStatus(s: string): s is CriticalStatus {
   return (CRITICAL_STATUSES as string[]).includes(s);
 }
 
-/** Display and message order: what needs attention first, settled outcomes last. */
+/** Order of the status summary counts: what needs attention first, settled outcomes last. */
 export const STATUS_ORDER: CriticalStatus[] = [
   "not_yet_taken", "ongoing", "cancelled", "overrun", "behind_schedule", "partially_achieved", "complete", "handed_back_early",
 ];
 
-export function statusRank(status: string): number {
-  const i = STATUS_ORDER.indexOf(isCriticalStatus(status) ? status : "not_yet_taken");
-  return i === -1 ? 0 : i;
-}
+type Sortable = { start_at: string | null; item_no: number | null };
 
-type Sortable = { status: string; start_at: string | null; item_no: number | null };
-
-/** Status order, then start time, then item number. */
-export function compareByStatus(a: Sortable, b: Sortable): number {
-  return statusRank(a.status) - statusRank(b.status)
-    || (ms(a.start_at) ?? Number.MAX_SAFE_INTEGER) - (ms(b.start_at) ?? Number.MAX_SAFE_INTEGER)
+/** Start time, then item number. Status plays no part, so items stay put as they are updated. */
+export function compareByTime(a: Sortable, b: Sortable): number {
+  return (ms(a.start_at) ?? Number.MAX_SAFE_INTEGER) - (ms(b.start_at) ?? Number.MAX_SAFE_INTEGER)
     || (a.item_no ?? 0) - (b.item_no ?? 0);
 }
 
@@ -251,7 +244,7 @@ export function selectItemsForSlot(items: CriticalItemLite[], w: SlotWindow): Se
     const reason = pendingReason(start, end, at, prev, next);
     if (reason) out.push({ item, reason });
   }
-  out.sort((a, b) => compareByStatus(a.item, b.item));
+  out.sort((a, b) => compareByTime(a.item, b.item));
   return out;
 }
 
@@ -310,7 +303,7 @@ export function formatItem(item: CriticalItemLite, reason: SelectionReason = "du
 
 /**
  * Body text of the engineering section for a slot (no heading): one list in
- * status order. A weekend message opens with a line saying it is the running
+ * time order. A weekend message opens with a line saying it is the running
  * list.
  */
 export function renderEngineeringSection(selected: SelectedItem[], slot: MessageSlot, weekend = false): string {
@@ -318,7 +311,7 @@ export function renderEngineeringSection(selected: SelectedItem[], slot: Message
     if (weekend) return "No critical engineering works this weekend.";
     return slot === "2200" ? "No critical engineering works tonight." : slot === "0530" ? "No critical engineering works overnight." : "No critical engineering works ongoing.";
   }
-  const sorted = [...selected].sort((a, b) => compareByStatus(a.item, b.item));
+  const sorted = [...selected].sort((a, b) => compareByTime(a.item, b.item));
   const body = sorted.map((s) => formatItem(s.item, s.reason)).join("\n\n");
   return weekend ? `_Weekend running list until 05:30 Monday_\n\n${body}` : body;
 }
