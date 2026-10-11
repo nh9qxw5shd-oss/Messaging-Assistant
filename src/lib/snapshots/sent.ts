@@ -10,10 +10,10 @@ import { create } from "zustand";
 import { supabase } from "../supabase";
 import { londonNow, shiftDate, slotKey, type MessagePin } from "./messageSlot";
 
-const MOVED_ON_KEY = "ma_tactical_moved_on";
+export const MOVED_ON_KEY = "ma_tactical_moved_on";
 const POLL_MS = 60_000;
 
-function loadMovedOn(): string[] {
+export function loadMovedOn(): string[] {
   if (typeof window === "undefined") return [];
   try {
     const list: unknown = JSON.parse(localStorage.getItem(MOVED_ON_KEY) ?? "[]");

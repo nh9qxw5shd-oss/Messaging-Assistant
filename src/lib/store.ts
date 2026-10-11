@@ -34,14 +34,14 @@ import {
 import { activeTacticalSlot } from "./snapshots/messageSlot";
 import { propagateAll } from "./targetSync";
 import { applyAutoAmber, autoAmber } from "./ragLogic";
+import { parseSession } from "./sessionParse";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function loadSession(): Partial<SessionState> {
   if (typeof window === "undefined") return {};
   try {
-    const raw = localStorage.getItem(LS_SESSION_KEY);
-    return raw ? JSON.parse(raw) : {};
+    return parseSession(localStorage.getItem(LS_SESSION_KEY)) ?? {};
   } catch {
     return {};
   }
@@ -167,6 +167,10 @@ export interface AppStore {
 
   // ─── Persistence ─────────────────────────────────────────────────────────
   hydrate:      () => void;
+  /** Take a session saved by another open copy (storage event); never writes back. */
+  applySavedSession: (raw: string | null) => void;
+  /** Take the live-performance on/off choice made in another open copy. */
+  applyLivePerfSetting: (raw: string | null) => void;
   persist:      () => void;
   backupNow:    (reason?: string) => void;
   getBackups:   () => BackupEntry[];
@@ -472,6 +476,21 @@ export const useStore = create<AppStore>((set, get) => {
         tac:        withAutoSlot({ ...s.tac, ...(saved.tac ?? {}) }),
         safety_msg: { ...s.safety_msg, ...(saved.safety_msg ?? {}) },
       }));
+    },
+    applySavedSession: (raw) => {
+      const saved = parseSession(raw);
+      if (!saved) return;
+      set((s) => ({
+        meta:       { ...s.meta,       ...(saved.meta       ?? {}) },
+        sos:        { ...s.sos,        ...(saved.sos        ?? {}) },
+        str_am:     { ...s.str_am,     ...(saved.str_am     ?? {}) },
+        str_pm:     { ...s.str_pm,     ...(saved.str_pm     ?? {}) },
+        tac:        { ...s.tac,        ...(saved.tac        ?? {}) },
+        safety_msg: { ...s.safety_msg, ...(saved.safety_msg ?? {}) },
+      }));
+    },
+    applyLivePerfSetting: (raw) => {
+      set((s) => ({ livePerf: { ...s.livePerf, enabled: raw !== "off" } }));
     },
     persist,
     backupNow: (reason = "auto") => {

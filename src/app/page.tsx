@@ -25,6 +25,7 @@ import TacticalTab     from "@/components/tabs/TacticalTab";
 import SafetyTab       from "@/components/tabs/SafetyTab";
 import IncidentTab     from "@/components/tabs/IncidentTab";
 import TargetsTab      from "@/components/tabs/TargetsTab";
+import { useLiveStorage } from "@/lib/liveStorage";
 
 const TAB_PANELS: Record<TabKey, React.ReactNode> = {
   sos:          <SoSTab />,
@@ -54,6 +55,9 @@ export default function Page() {
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  // ─── Take in saves made by other open copies (hub frame, other tabs) ─────
+  useLiveStorage();
 
   // ─── Deep link: ?tab=<key> (the hub's cadence links) wins over the saved tab
   // once, then leaves the URL so a reload keeps the controller's own choice.
