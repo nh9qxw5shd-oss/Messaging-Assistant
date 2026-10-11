@@ -24,6 +24,8 @@ the tactical (09:00 / 15:00 / 22:00) and SoS (05:30) WhatsApp messages.
   hostname too; its root and `/banners/*` redirect under the prefix. `<Link>` and the router add
   the prefix themselves; a hand-built URL does not, so `fetch("/api/...")`, `<img src>` and
   absolute Teams banner URLs go through `src/lib/basePath.ts`.
+- The address carries the open tab (`?tab=<key>`, kept in step by `src/app/page.tsx`): the hub reads it
+  to highlight the section, and a link with `?tab=` opens that tab.
 - Saved state follows the latest save in every open copy (standalone tab, hub frame, other tabs):
   `src/lib/liveStorage.ts` takes in storage changes made elsewhere (session, incidents, moved-on,
   live-performance switch) without writing them back. New persisted keys need a line there.

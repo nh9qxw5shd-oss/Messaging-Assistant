@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useStore } from "@/lib/store";
 import { NAV_ITEMS } from "@/lib/nav";
 import {
@@ -59,16 +59,27 @@ export default function Page() {
   // ─── Take in saves made by other open copies (hub frame, other tabs) ─────
   useLiveStorage();
 
-  // ─── Deep link: ?tab=<key> (the hub's cadence links) wins over the saved tab
-  // once, then leaves the URL so a reload keeps the controller's own choice.
+  // ─── Deep link: ?tab=<key> (the hub's links and cadence) wins over the saved tab
+  const urlTab = useRef<string | null>(null);
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const tab = url.searchParams.get("tab");
-    if (!tab) return;
-    if (NAV_ITEMS.some((n) => n.tab === tab)) setActiveTab(tab as TabKey);
-    url.searchParams.delete("tab");
-    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    const tab = new URL(window.location.href).searchParams.get("tab");
+    if (!tab || !NAV_ITEMS.some((n) => n.tab === tab)) return;
+    urlTab.current = tab;
+    setActiveTab(tab as TabKey);
   }, [setActiveTab]);
+
+  // ─── The address follows the open tab (?tab=<key>), so the hub can show which
+  // section is open and a reload stays on it. Waits for a deep link to land first.
+  useEffect(() => {
+    if (urlTab.current) {
+      if (activeTab !== urlTab.current) return;
+      urlTab.current = null;
+    }
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("tab") === activeTab) return;
+    url.searchParams.set("tab", activeTab);
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+  }, [activeTab]);
 
   // ─── Apply theme to <html> (tokens switch on data-theme) ─────────────────
   useEffect(() => {
