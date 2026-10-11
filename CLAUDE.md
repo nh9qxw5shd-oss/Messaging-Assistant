@@ -24,6 +24,9 @@ the tactical (09:00 / 15:00 / 22:00) and SoS (05:30) WhatsApp messages.
   hostname too; its root and `/banners/*` redirect under the prefix. `<Link>` and the router add
   the prefix themselves; a hand-built URL does not, so `fetch("/api/...")`, `<img src>` and
   absolute Teams banner URLs go through `src/lib/basePath.ts`.
+- `public/storage-bridge.html` lets the hub (PotatOS) share this system's browser storage with
+  the standalone site when it is framed on overseer.derbycontrol.co.uk. It is byte-identical in
+  every system that keeps browser storage; change all or none. Keep storage keys prefixed.
 
 ## Design language: Autumn Hub (default for every rebuild and new system)
 
