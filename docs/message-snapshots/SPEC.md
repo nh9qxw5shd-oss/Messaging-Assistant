@@ -1,35 +1,53 @@
 # Message Snapshots — Brief
 
-Every **Build message** press captures a snapshot of the built message into
-Supabase, pinned to the **next approaching slot**. Snapshots give Insight a
-reliable, queryable record of what was reported and what the metric standing
-was at each reporting point of the day.
+Every **Save progress & build** press captures a snapshot of the built
+message into Supabase, logged against **the message's own slot**. A separate
+**Mark … as sent** press records that the message went out (`sent_at`); the
+Derby Control hub cockpit counts a cadence message as issued only from that
+mark. Snapshots give Insight a reliable, queryable record of what was reported
+and what the metric standing was at each reporting point of the day.
 
 ## Slots
 
 Slots are **Europe/London local times** (DST-aware — the same wall-clock times
 apply in GMT and BST):
 
-| Slot   | Local time | Typical message              |
+| Slot   | Local time | Message                      |
 |--------|------------|------------------------------|
 | `0530` | 05:30      | Start of Service             |
 | `0900` | 09:00      | Tactical                     |
 | `1500` | 15:00      | Tactical                     |
 | `2200` | 22:00      | Tactical                     |
 
-### Pinning rules
+### Pinning rules (`src/lib/snapshots/messageSlot.ts`)
 
-- A build pins to the **first slot at or after the current London time**.
-  E.g. a build at 07:12 pins to `0900`; a build at 04:50 pins to `0530`.
-- **Boundary:** a build during a slot's exact minute (e.g. 09:00:xx) still
-  belongs to that slot. From the next minute (09:01) it pins to the following
-  slot (`1500`).
-- **Rollover:** after 22:00 (i.e. from 22:01) builds pin to **tomorrow's
-  `0530`** — `snapshot_date` is the next calendar day.
-- **Replace, not duplicate:** rebuilds before the slot passes overwrite that
-  slot's snapshot wholesale (upsert on `(snapshot_date, slot)`), incrementing
-  `build_count` and refreshing `last_built_at`. The last build before the slot
-  passes is the snapshot of record.
+- **SoS tab** → slot `0530`, dated today, or tomorrow from 22:00.
+- **Tactical tab** → the slot selected on the tab, dated at its nearest
+  occurrence (within 12 hours either side of now). So the 09:00 message built
+  at 09:20 is the `0900` snapshot, and `0900` picked at 22:30 is tomorrow's.
+- **Safety and incident messages** are not on the cadence and are not captured.
+- **Replace, not duplicate:** rebuilds overwrite that slot's snapshot
+  wholesale (upsert on `(snapshot_date, slot)`), incrementing `build_count`
+  and refreshing `last_built_at`.
+
+### Tactical slot on auto
+
+Auto stays on the current message until it is **marked as sent**, **moved on**
+by hand (per browser, not logged), or **an hour past its booked time**; after
+22:00 it is tomorrow's 09:00. Sent marks are read every minute, so a mark made
+on one machine moves every open Assistant on.
+
+### Sent marks
+
+- `ma_mark_message_sent(...)` (same parameters as the capture RPC) stores the
+  message as the snapshot of record and sets `sent_at` if it is not already
+  set. The first mark's time is kept, so a correction rebuilt afterwards does
+  not move it.
+- `ma_unmark_message_sent(p_snapshot_date, p_slot)` clears a mark made in
+  error (the Undo beside the sent time).
+- Builds through `ma_capture_message_snapshot` never touch `sent_at`.
+
+Created by `supabase/migrations/003_message_sent.sql`.
 
 ## Storage — `ma_message_snapshots`
 
@@ -40,7 +58,7 @@ Created by `supabase/migrations/002_message_snapshots.sql`.
 | `id`               | `uuid`        | Primary key.                                                             |
 | `snapshot_date`    | `date`        | London calendar date the slot belongs to.                                |
 | `slot`             | `text`        | `0530` \| `0900` \| `1500` \| `2200`.                                    |
-| `tab`              | `text`        | Tab built: `sos`, `strategic_am`, `strategic_pm`, `tactical`, `safety_msg`. |
+| `tab`              | `text`        | Tab built: `sos` or `tactical` (older rows may carry other tabs).        |
 | `message`          | `text`        | Full built plain-text message, verbatim.                                 |
 | `payload`          | `jsonb`       | Full structured content: `{ meta, state }` (complete tab state at build). |
 | `metrics`          | `jsonb`       | Parsed metrics array — see element schema below.                          |
@@ -48,6 +66,7 @@ Created by `supabase/migrations/002_message_snapshots.sql`.
 | `build_count`      | `integer`     | Build presses that landed on this slot (1, then +1 per replace).          |
 | `first_built_at`   | `timestamptz` | First capture for this slot.                                             |
 | `last_built_at`    | `timestamptz` | Most recent capture (the content stored).                                |
+| `sent_at`          | `timestamptz` | When the message was marked as sent; null while only built.              |
 
 Unique constraint: `(snapshot_date, slot)`. Index on `metrics_for_date`.
 
@@ -89,8 +108,12 @@ produce duplicate slot rows.
 
 ## Capture pipeline
 
-`Build message` (button or Ctrl+Enter) → `Composer.build()` →
-`captureMessageSnapshot()` (`src/lib/snapshots/capture.ts`).
+`Save progress & build` (button or Ctrl+Enter) → `Composer.build()` →
+`captureMessageSnapshot(pinForMessage(...))` (`src/lib/snapshots/capture.ts`).
+
+`Mark … as sent` → builds, then `writeMessageSent()` → `ma_mark_message_sent`.
+Unlike capture, a failed mark is reported to the operator, so nobody is left
+thinking a message was logged when it was not.
 
 **Capture never blocks message building.** It is fire-and-forget:
 
@@ -99,10 +122,12 @@ produce duplicate slot rows.
 - Any failure — Supabase not configured, network down, RPC error, unexpected
   exception — is caught, logged with `console.warn`, and swallowed. The
   operator's build/copy flow is unaffected in every case.
-- Builds on the config tab (`targets`) and empty builds are skipped.
+- Builds of messages without a slot (safety, incident, the `targets` config
+  tab) and empty builds are skipped.
 
-Slot resolution and metric parsing are pure functions in
-`src/lib/snapshots/slots.ts` (`resolveSnapshotSlot`, `parseSnapshotMetrics`).
+Slot resolution is pure and unit-tested in `src/lib/snapshots/messageSlot.ts`
+(`pinForMessage`, `activeTacticalSlot`); metric parsing is
+`parseSnapshotMetrics` in `src/lib/snapshots/slots.ts`.
 
 ## Read contract (Insight)
 

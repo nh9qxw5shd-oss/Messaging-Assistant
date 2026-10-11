@@ -3,7 +3,9 @@
 export const BUILD_EVENT = "ma:build";
 export const COPY_EVENT = "ma:copy";
 export const PALETTE_EVENT = "ma:palette";
+export const MARK_SENT_EVENT = "ma:mark-sent";
 
 export function requestBuild(): void { window.dispatchEvent(new CustomEvent(BUILD_EVENT)); }
 export function requestCopy(): void { window.dispatchEvent(new CustomEvent(COPY_EVENT)); }
+export function requestMarkSent(): void { window.dispatchEvent(new CustomEvent(MARK_SENT_EVENT)); }
 export function openPalette(): void { window.dispatchEvent(new CustomEvent(PALETTE_EVENT)); }

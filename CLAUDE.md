@@ -11,8 +11,13 @@ the tactical (09:00 / 15:00 / 22:00) and SoS (05:30) WhatsApp messages.
   WON Splitter) through `eng_critical_items`. `src/lib/engineering/criticalMessage.ts`
   is a verbatim copy of the Hub's `src/lib/critical/criticalMessage.ts` and must stay
   byte-identical; change both or neither.
-- The tactical slot follows the London clock, with a manual override that an "Auto"
-  button re-engages. A customised intro is never overwritten; auto text only replaces
+- "Save progress & build" saves and builds; it never marks a message as sent. "Mark …
+  as sent" records `sent_at` on `ma_message_snapshots`, and the hub cockpit counts only
+  that. Each build or mark is logged against the message's own slot
+  (`src/lib/snapshots/messageSlot.ts`), never the next clock slot.
+- The tactical slot on auto stays on the current message until it is marked as sent,
+  moved on by hand, or an hour past its booked time; a manual pick overrides and the
+  "Auto" button re-engages. A customised intro is never overwritten; auto text only replaces
   a blank field or the last auto-filled text.
 - Mounted on the Derby Control hub (PotatOS) at `overseer.derbycontrol.co.uk/messaging`, which
   proxies `/messaging/*` here. `basePath` is `/messaging` (`next.config.mjs`) on the standalone

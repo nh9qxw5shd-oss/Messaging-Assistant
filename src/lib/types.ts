@@ -85,7 +85,7 @@ export type TacticalSlot = "0900" | "1500" | "2200";
 export type AutoMode = "auto" | "manual";
 
 export interface TacticalState {
-  /** Set automatically from the London clock while slotMode is "auto". */
+  /** While slotMode is "auto": the current message until it is sent, moved on or an hour past its time. */
   slot: TacticalSlot;
   slotMode: AutoMode;
   intro: string;
@@ -160,13 +160,6 @@ export interface SeasonalTemplate {
 
 export type SnapshotSlot = "0530" | "0900" | "1500" | "2200";
 
-/** Where a Build press lands: the slot, its calendar date, and the date its metrics describe. */
-export interface SnapshotSlotPin {
-  snapshotDate: string;   // YYYY-MM-DD, Europe/London
-  slot: SnapshotSlot;
-  metricsForDate: string; // YYYY-MM-DD; previous day for 0530, snapshotDate otherwise
-}
-
 /** One parsed metric data point stored in ma_message_snapshots.metrics. */
 export interface SnapshotMetric {
   name: string;                              // matches ma_targets.name exactly
@@ -191,6 +184,8 @@ export interface MessageSnapshot {
   build_count: number;
   first_built_at: string;
   last_built_at: string;
+  /** When the message was marked as sent; null while it has only been built. */
+  sent_at: string | null;
 }
 
 // ─── Live performance feed (NWR RDM) ─────────────────────────────────────────

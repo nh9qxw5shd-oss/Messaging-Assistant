@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown, SkipForward } from "lucide-react";
 import { useStore } from "@/lib/store";
 import AutoTextarea from "@/components/shared/AutoTextarea";
 import StatusSelect from "@/components/shared/StatusSelect";
@@ -9,8 +9,9 @@ import LivePerfStatus from "@/components/shared/LivePerfStatus";
 import EngineeringHubSection, { type FillMsg } from "@/components/shared/EngineeringHubSection";
 import { LONG_OPS, TACTICAL_SLOTS } from "@/lib/constants";
 import type { TacticalSlot } from "@/lib/types";
-import { defaultTacticalSlot } from "@/lib/engineering/criticalMessage";
-import { SLOT_LABEL, buildEngineeringForSlot, describeEngineeringFill, tacticalDateISO } from "@/lib/engineering/engineeringHub";
+import { SLOT_LABEL, buildEngineeringForSlot, describeEngineeringFill } from "@/lib/engineering/engineeringHub";
+import { activeTacticalSlot, slotKey, tacticalSlotDate } from "@/lib/snapshots/messageSlot";
+import { doneKeys, useSentStore } from "@/lib/snapshots/sent";
 
 import TabHeader from "@/components/TabHeader";
 import { Badge, Card, Field, StatusDot } from "@/components/ui";
@@ -26,22 +27,27 @@ export default function TacticalTab() {
   const tacTemplates = seasonalTemplates.filter((t) => t.tab === "tactical");
 
   // ─── Slot auto-selection ──────────────────────────────────────────────────
-  // While on auto the tab follows the London clock: 09:00 until 09:00, then
-  // 15:00, then 22:00 (and stays on 22:00 after it — the next message is the
-  // 05:30 SoS). Re-evaluated on open and every minute.
+  // While on auto the tab stays on the current message (09:00, 15:00, 22:00)
+  // until it is marked as sent, moved on by hand, or an hour past its booked
+  // time; after 22:00 it is tomorrow's 09:00. Re-evaluated on open, every
+  // minute and whenever a sent mark arrives (from this or another machine).
+  const sent = useSentStore((s) => s.sent);
+  const movedOn = useSentStore((s) => s.movedOn);
+  const moveOn = useSentStore((s) => s.moveOn);
+  const doneSig = [...doneKeys({ sent, movedOn })].sort().join(",");
   useEffect(() => {
     if (tac.slotMode !== "auto") return;
     const tick = () => {
-      const next = defaultTacticalSlot();
-      if (next !== useStore.getState().tac.slot) setTacSlot(next);
+      const { slot } = activeTacticalSlot(new Date(), doneKeys(useSentStore.getState()));
+      if (slot !== useStore.getState().tac.slot) setTacSlot(slot);
     };
     tick();
     const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
-  }, [tac.slotMode, setTacSlot]);
+  }, [tac.slotMode, setTacSlot, doneSig]);
 
   // ─── Critical engineering from the Engineering Hub ────────────────────────
-  // Fetched for the slot's date (today, London) on open, on a slot change and
+  // Fetched for the slot's date (its nearest occurrence) on open, on a slot change and
   // on Refresh while on auto. A failed read keeps whatever text is there.
   const [engBusy, setEngBusy] = useState(false);
   const [engMsg, setEngMsg] = useState<FillMsg>(null);
@@ -51,7 +57,7 @@ export default function TacticalTab() {
     const req = ++engReq.current;
     setEngBusy(true);
     try {
-      const r = await buildEngineeringForSlot(slot, tacticalDateISO());
+      const r = await buildEngineeringForSlot(slot, tacticalSlotDate(slot));
       // A newer request, or a switch to manual while reading, wins.
       if (req !== engReq.current || useStore.getState().tac.engMode !== "auto") return;
       setTac({ eng: r.text });
@@ -77,23 +83,44 @@ export default function TacticalTab() {
       <TabHeader
         tab="tactical"
         badge={<Badge color="var(--accent)" dot>{SLOT_LABEL[tac.slot]} · {auto ? "auto" : "manual"}</Badge>}
-        subtitle="The slot follows the London clock. Pick one to override; Auto hands it back."
+        subtitle="Auto stays on each message until it is marked as sent or an hour past its time. Pick one to override; Auto hands it back."
         actions={
           <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Tactical message slot">
-            {TACTICAL_SLOTS.map((s) => (
-              <button key={s} type="button" className="chip font-mono" aria-pressed={tac.slot === s} onClick={() => setTacSlot(s, "manual")}>
-                {SLOT_LABEL[s]}
-              </button>
-            ))}
+            {TACTICAL_SLOTS.map((s) => {
+              const sentAt = sent[slotKey(tacticalSlotDate(s), s)];
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  className="chip font-mono"
+                  aria-pressed={tac.slot === s}
+                  onClick={() => setTacSlot(s, "manual")}
+                  title={sentAt ? `Marked as sent at ${new Date(sentAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" })}` : undefined}
+                >
+                  {sentAt && <Check size={13} style={{ color: "var(--good)" }} aria-label="sent" />}
+                  {SLOT_LABEL[s]}
+                </button>
+              );
+            })}
             <button
               type="button"
               className="chip"
               aria-pressed={auto}
-              onClick={() => { if (!auto) setTacSlot(defaultTacticalSlot(), "auto"); }}
-              title={auto ? "Following the London clock; pick a slot to override" : "Follow the London clock again"}
+              onClick={() => { if (!auto) setTacSlot(activeTacticalSlot(new Date(), doneKeys(useSentStore.getState())).slot, "auto"); }}
+              title={auto ? "Following the current message; pick a slot to override" : "Follow the current message again"}
             >
               <StatusDot color={auto ? "var(--good)" : "var(--text-faint)"} /> Auto
             </button>
+            {auto && (
+              <button
+                type="button"
+                className="chip"
+                onClick={() => moveOn(slotKey(tacticalSlotDate(tac.slot), tac.slot))}
+                title="Move on to the next message without marking this one as sent"
+              >
+                <SkipForward size={13} /> Move on
+              </button>
+            )}
           </div>
         }
       />

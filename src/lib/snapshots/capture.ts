@@ -1,5 +1,6 @@
 import { supabase } from "../supabase";
-import { parseSnapshotMetrics, resolveSnapshotSlot } from "./slots";
+import { parseSnapshotMetrics } from "./slots";
+import type { MessagePin } from "./messageSlot";
 import type { AppStore } from "../store";
 import type { TabKey, TargetMetric } from "../types";
 
@@ -19,34 +20,35 @@ function tabState(tab: TabKey, s: SessionSlice): { state: unknown; perf: TargetM
   }
 }
 
+function snapshotParams(pin: MessagePin, tab: TabKey, message: string, session: SessionSlice) {
+  const { state, perf } = tabState(tab, session);
+  return {
+    p_snapshot_date:    pin.snapshotDate,
+    p_slot:             pin.slot,
+    p_tab:              tab,
+    p_message:          message,
+    p_payload:          { meta: session.meta, state },
+    p_metrics:          parseSnapshotMetrics(perf),
+    p_metrics_for_date: pin.metricsForDate,
+  };
+}
+
 /**
- * Capture a snapshot of a built message, pinned to the next approaching slot.
- * Fire-and-forget: never throws, never blocks message building — any failure
- * (Supabase unconfigured, network down, RPC error) is logged and swallowed.
+ * Save progress: capture a snapshot of a built message against its own slot
+ * (pinForMessage). Fire-and-forget: never throws, never blocks message
+ * building — any failure (Supabase unconfigured, network down, RPC error) is
+ * logged and swallowed. Messages without a slot (safety, incident) are not
+ * captured.
  */
 export function captureMessageSnapshot(
+  pin: MessagePin | null,
   tab: TabKey,
   message: string,
   session: SessionSlice,
-  now: Date = new Date()
 ): void {
   try {
-    if (!supabase || tab === "targets" || message.trim() === "") return;
-
-    const pin = resolveSnapshotSlot(now);
-    const { state, perf } = tabState(tab, session);
-
-    Promise.resolve(
-      supabase.rpc("ma_capture_message_snapshot", {
-        p_snapshot_date:    pin.snapshotDate,
-        p_slot:             pin.slot,
-        p_tab:              tab,
-        p_message:          message,
-        p_payload:          { meta: session.meta, state },
-        p_metrics:          parseSnapshotMetrics(perf),
-        p_metrics_for_date: pin.metricsForDate,
-      })
-    )
+    if (!supabase || !pin || message.trim() === "") return;
+    Promise.resolve(supabase.rpc("ma_capture_message_snapshot", snapshotParams(pin, tab, message, session)))
       .then(({ error }) => {
         if (error) console.warn("Message snapshot capture failed:", error.message);
       })
@@ -54,4 +56,21 @@ export function captureMessageSnapshot(
   } catch (e) {
     console.warn("Message snapshot capture skipped:", e);
   }
+}
+
+/**
+ * Mark a message as sent: store it as the slot's snapshot of record and stamp
+ * sent_at. Resolves to the sent time; throws if it could not be saved, so the
+ * desk is told rather than left thinking it was logged.
+ */
+export async function writeMessageSent(
+  pin: MessagePin,
+  tab: TabKey,
+  message: string,
+  session: SessionSlice,
+): Promise<string> {
+  if (!supabase) throw new Error("Database not connected, so the sent mark was not saved");
+  const { data, error } = await supabase.rpc("ma_mark_message_sent", snapshotParams(pin, tab, message, session));
+  if (error) throw new Error(error.message);
+  return typeof data === "string" ? data : new Date().toISOString();
 }

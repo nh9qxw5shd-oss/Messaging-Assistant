@@ -152,7 +152,7 @@ export const DEFAULT_STR_PM: StrategicPMState = {
 
 export const DEFAULT_TAC: TacticalState = {
   // The slot is a placeholder here: the store's hydrate() replaces it with
-  // defaultTacticalSlot() on the client, so the server never reads the clock.
+  // activeTacticalSlot() on the client, so the server never reads the clock.
   slot: "0900",
   slotMode: "auto",
   intro: TACTICAL_GREETINGS["1500"],

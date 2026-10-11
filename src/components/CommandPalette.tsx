@@ -2,11 +2,11 @@
 // Command palette (Ctrl/Cmd + K): jump to any message, or build / copy the
 // current one, or switch theme, by typing.
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, ClipboardCopy, CornerDownLeft, LucideIcon, Moon, Search, Wand2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardCopy, CornerDownLeft, LucideIcon, Moon, Search, Wand2 } from "lucide-react";
 import { useHotkey } from "@/lib/hooks";
 import { NAV_ITEMS, isMessageTab } from "@/lib/nav";
 import { useStore } from "@/lib/store";
-import { PALETTE_EVENT, requestBuild, requestCopy } from "@/lib/uiEvents";
+import { PALETTE_EVENT, requestBuild, requestCopy, requestMarkSent } from "@/lib/uiEvents";
 
 interface Item { id: string; group: string; title: string; hint?: string; icon: LucideIcon; keywords?: string; run: () => void }
 
@@ -40,9 +40,12 @@ export function CommandPalette() {
     const actions: Item[] = [];
     if (isMessageTab(activeTab) && activeTab !== "incident") {
       actions.push(
-        { id: "a-build", group: "Actions", title: "Build message", hint: "Ctrl + Enter", icon: Wand2, keywords: "build compose generate", run: requestBuild },
+        { id: "a-build", group: "Actions", title: "Save progress & build", hint: "Ctrl + Enter", icon: Wand2, keywords: "build compose generate save progress", run: requestBuild },
         { id: "a-copy", group: "Actions", title: "Build and copy message", hint: "Copies for WhatsApp and Teams", icon: ClipboardCopy, keywords: "copy clipboard whatsapp teams", run: requestCopy },
       );
+      if (activeTab === "sos" || activeTab === "tactical") {
+        actions.push({ id: "a-sent", group: "Actions", title: "Mark current message as sent", hint: "Logs it on the cockpit; the tactical slot moves on", icon: CheckCircle2, keywords: "sent done complete issued", run: requestMarkSent });
+      }
     }
     actions.push({ id: "a-theme", group: "Actions", title: "Switch light / dark theme", icon: Moon, keywords: "theme light dark mode", run: toggleTheme });
     const pages: Item[] = NAV_ITEMS.map((n) => ({

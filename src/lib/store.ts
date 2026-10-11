@@ -31,7 +31,7 @@ import {
   BACKUP_TTL_DAYS,
   greetingForSlot,
 } from "./constants";
-import { defaultTacticalSlot } from "./engineering/criticalMessage";
+import { activeTacticalSlot } from "./snapshots/messageSlot";
 import { propagateAll } from "./targetSync";
 import { applyAutoAmber, autoAmber } from "./ragLogic";
 
@@ -74,13 +74,15 @@ function pruneBackups(list: BackupEntry[]): BackupEntry[] {
 }
 
 /**
- * While the tactical slot is on auto, point it at the slot the London clock
- * says is next (09:00 / 15:00 / 22:00) and keep a standard greeting in step.
- * Runs on the client only (hydrate / restore), never at module load.
+ * While the tactical slot is on auto, point it at the current message (09:00 /
+ * 15:00 / 22:00, held until an hour past its time) and keep a standard
+ * greeting in step. Sent marks are not known yet at this point; the Tactical
+ * tab applies them as soon as they are read. Runs on the client only
+ * (hydrate / restore), never at module load.
  */
 function withAutoSlot(tac: TacticalState): TacticalState {
   if (tac.slotMode !== "auto") return tac;
-  const slot = defaultTacticalSlot();
+  const { slot } = activeTacticalSlot();
   return { ...tac, slot, intro: greetingForSlot(tac.intro, slot) };
 }
 
