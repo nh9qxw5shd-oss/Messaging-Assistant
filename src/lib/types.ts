@@ -186,6 +186,8 @@ export interface MessageSnapshot {
   last_built_at: string;
   /** When the message was marked as sent; null while it has only been built. */
   sent_at: string | null;
+  /** How it was marked: on copy in its send window, or by hand. */
+  sent_via: "copy" | "manual" | null;
 }
 
 // ─── Live performance feed (NWR RDM) ─────────────────────────────────────────

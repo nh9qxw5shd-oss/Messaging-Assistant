@@ -29,12 +29,14 @@ export default function TacticalTab() {
   // ─── Slot auto-selection ──────────────────────────────────────────────────
   // While on auto the tab stays on the current message (09:00, 15:00, 22:00)
   // until it is marked as sent, moved on by hand, or an hour past its booked
-  // time; after 22:00 it is tomorrow's 09:00. Re-evaluated on open, every
+  // time; after 22:00 it is tomorrow's 09:00. One logged on copy stays a few
+  // minutes more, so it can be pasted again or corrected. Re-evaluated on open, every
   // minute and whenever a sent mark arrives (from this or another machine).
   const sent = useSentStore((s) => s.sent);
+  const sentVia = useSentStore((s) => s.via);
   const movedOn = useSentStore((s) => s.movedOn);
   const moveOn = useSentStore((s) => s.moveOn);
-  const doneSig = [...doneKeys({ sent, movedOn })].sort().join(",");
+  const doneSig = [...Object.keys(sent), ...movedOn].sort().join(",");
   useEffect(() => {
     if (tac.slotMode !== "auto") return;
     const tick = () => {
@@ -83,11 +85,12 @@ export default function TacticalTab() {
       <TabHeader
         tab="tactical"
         badge={<Badge color="var(--accent)" dot>{SLOT_LABEL[tac.slot]} · {auto ? "auto" : "manual"}</Badge>}
-        subtitle="Auto stays on each message until it is marked as sent or an hour past its time. Pick one to override; Auto hands it back."
+        subtitle="Auto stays on each message until it is sent (copying it from 30 minutes before its time logs it) or an hour past its time. Pick one to override; Auto hands it back."
         actions={
           <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Tactical message slot">
             {TACTICAL_SLOTS.map((s) => {
-              const sentAt = sent[slotKey(tacticalSlotDate(s), s)];
+              const key = slotKey(tacticalSlotDate(s), s);
+              const sentAt = sent[key];
               return (
                 <button
                   key={s}
@@ -95,7 +98,7 @@ export default function TacticalTab() {
                   className="chip font-mono"
                   aria-pressed={tac.slot === s}
                   onClick={() => setTacSlot(s, "manual")}
-                  title={sentAt ? `Marked as sent at ${new Date(sentAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" })}` : undefined}
+                  title={sentAt ? `${sentVia[key] === "copy" ? "Logged as sent on copy" : "Marked as sent"} at ${new Date(sentAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" })}` : undefined}
                 >
                   {sentAt && <Check size={13} style={{ color: "var(--good)" }} aria-label="sent" />}
                   {SLOT_LABEL[s]}

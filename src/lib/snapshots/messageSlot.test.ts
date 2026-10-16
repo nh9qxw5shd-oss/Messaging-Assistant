@@ -2,8 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   activeTacticalSlot,
+  copyLogsSent,
+  minutesPastBooked,
   nextTacticalSlot,
   pinForMessage,
+  sendOverdue,
+  settledKeys,
   slotKey,
   sosSlotDate,
   tacticalSlotDate,
@@ -86,4 +90,47 @@ test("move on cycles through the three slots", () => {
   assert.equal(nextTacticalSlot("0900"), "1500");
   assert.equal(nextTacticalSlot("1500"), "2200");
   assert.equal(nextTacticalSlot("2200"), "0900");
+});
+
+const tac0900 = { snapshotDate: "2026-10-11", slot: "0900" as const };
+
+test("minutesPastBooked counts across midnight", () => {
+  assert.equal(minutesPastBooked(tac0900, bst("09:20")), 20);
+  assert.equal(minutesPastBooked(tac0900, bst("08:30")), -30);
+  assert.equal(minutesPastBooked({ snapshotDate: "2026-10-11", slot: "2200" }, bst("00:20", "2026-10-12")), 140);
+  assert.equal(minutesPastBooked({ snapshotDate: "2026-10-12", slot: "0530" }, bst("23:00")), -390);
+});
+
+test("a copy logs the send from 30 minutes before to an hour after the booked time", () => {
+  assert.equal(copyLogsSent(tac0900, bst("08:29")), false);
+  assert.equal(copyLogsSent(tac0900, bst("08:30")), true);
+  assert.equal(copyLogsSent(tac0900, bst("09:00")), true);
+  assert.equal(copyLogsSent(tac0900, bst("10:00")), true);
+  assert.equal(copyLogsSent(tac0900, bst("10:01")), false);
+  // The 22:00 copied after midnight is still in its window.
+  assert.equal(copyLogsSent({ snapshotDate: "2026-10-11", slot: "2200" }, bst("22:50")), true);
+  assert.equal(copyLogsSent({ snapshotDate: "2026-10-11", slot: "2200" }, bst("23:30")), false);
+  // A 22:00 preview copied in the afternoon is not a send.
+  assert.equal(copyLogsSent({ snapshotDate: "2026-10-11", slot: "2200" }, bst("15:10")), false);
+});
+
+test("a message is flagged from 15 minutes to two hours late unless sent", () => {
+  assert.equal(sendOverdue(tac0900, false, bst("09:14")), false);
+  assert.equal(sendOverdue(tac0900, false, bst("09:15")), true);
+  assert.equal(sendOverdue(tac0900, true, bst("09:15")), false);
+  assert.equal(sendOverdue(tac0900, false, bst("11:00")), true);
+  assert.equal(sendOverdue(tac0900, false, bst("11:01")), false);
+});
+
+test("auto holds a message logged on copy for 15 minutes", () => {
+  const k = slotKey("2026-10-11", "0900");
+  const sent = { [k]: bst("09:02").toISOString() };
+  assert.equal(settledKeys(sent, { [k]: "copy" }, [], bst("09:10")).has(k), false);
+  assert.equal(settledKeys(sent, { [k]: "copy" }, [], bst("09:17")).has(k), true);
+  assert.equal(settledKeys(sent, { [k]: "manual" }, [], bst("09:03")).has(k), true);
+  assert.equal(settledKeys(sent, {}, [], bst("09:03")).has(k), true);
+  assert.equal(settledKeys({}, {}, ["x"], bst("09:03")).has("x"), true);
+  // Held, auto stays on 09:00; once settled it moves to 15:00.
+  assert.equal(activeTacticalSlot(bst("09:10"), settledKeys(sent, { [k]: "copy" }, [], bst("09:10"))).slot, "0900");
+  assert.equal(activeTacticalSlot(bst("09:20"), settledKeys(sent, { [k]: "copy" }, [], bst("09:20"))).slot, "1500");
 });

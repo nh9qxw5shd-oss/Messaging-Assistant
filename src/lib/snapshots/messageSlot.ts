@@ -128,3 +128,56 @@ export function pinForMessage(tab: string, tacticalSlot: TacticalSlot, now: Date
   }
   return null;
 }
+
+// ─── Sent signals ───────────────────────────────────────────────────────────
+// Copying a scheduled message in its send window logs it as sent; there is no
+// other way to see what went out on WhatsApp, and copying is the one step
+// every send goes through.
+
+/** A copy counts as the send from this many minutes before the booked time… */
+export const COPY_WINDOW_BEFORE_MINUTES = 30;
+/** …until auto would move on from it. */
+export const COPY_WINDOW_AFTER_MINUTES = GRACE_MINUTES;
+/** Auto stays on a message logged on copy this long, so it can be pasted again (Teams) or corrected. */
+export const COPY_HOLD_MINUTES = 15;
+/** A message not logged as sent this long after its booked time is flagged… */
+export const NUDGE_AFTER_MINUTES = 15;
+/** …until this long after it, when it is no longer the message in hand. */
+export const NUDGE_UNTIL_MINUTES = 120;
+
+/** Minutes from the pinned message's booked time to now: negative before, positive after. */
+export function minutesPastBooked(pin: Pick<MessagePin, "snapshotDate" | "slot">, now: Date = new Date()): number {
+  const { dateISO, minutes } = londonNow(now);
+  const days = Math.round((Date.parse(pin.snapshotDate) - Date.parse(dateISO)) / 86_400_000);
+  return minutes - (days * DAY + SLOT_MINUTES[pin.slot]);
+}
+
+/** Whether copying this message now logs it as sent. */
+export function copyLogsSent(pin: Pick<MessagePin, "snapshotDate" | "slot">, now: Date = new Date()): boolean {
+  const past = minutesPastBooked(pin, now);
+  return past >= -COPY_WINDOW_BEFORE_MINUTES && past <= COPY_WINDOW_AFTER_MINUTES;
+}
+
+/** Whether to flag the message as not yet logged as sent. */
+export function sendOverdue(pin: Pick<MessagePin, "snapshotDate" | "slot">, sent: boolean, now: Date = new Date()): boolean {
+  if (sent) return false;
+  const past = minutesPastBooked(pin, now);
+  return past >= NUDGE_AFTER_MINUTES && past <= NUDGE_UNTIL_MINUTES;
+}
+
+export type SentVia = "copy" | "manual";
+
+/**
+ * Slot keys auto treats as done: every sent mark except one logged on copy in
+ * the last few minutes, plus those moved on by hand.
+ */
+export function settledKeys(
+  sent: Readonly<Record<string, string>>,
+  via: Readonly<Record<string, SentVia>>,
+  movedOn: readonly string[],
+  now: Date = new Date(),
+): Set<string> {
+  const held = (k: string) =>
+    via[k] === "copy" && now.getTime() - Date.parse(sent[k]) < COPY_HOLD_MINUTES * 60_000;
+  return new Set([...Object.keys(sent).filter((k) => !held(k)), ...movedOn]);
+}

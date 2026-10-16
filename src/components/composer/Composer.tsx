@@ -1,10 +1,10 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, ClipboardCopy, Smile, Undo2, Wand2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ClipboardCopy, Smile, Undo2, Wand2 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { buildMessage, buildTeamsHtml } from "@/lib/messageBuilders";
 import { captureMessageSnapshot, writeMessageSent } from "@/lib/snapshots/capture";
-import { pinForMessage, slotKey } from "@/lib/snapshots/messageSlot";
+import { copyLogsSent, pinForMessage, sendOverdue, slotKey, type SentVia } from "@/lib/snapshots/messageSlot";
 import { useSentStore, useSentSync } from "@/lib/snapshots/sent";
 import BannerPreview from "./BannerPreview";
 import EmojiTray from "./EmojiTray";
@@ -29,7 +29,14 @@ export default function Composer() {
   const { item } = navFor(activeTab);
   useSentSync();
   const sent = useSentStore((s) => s.sent);
+  const sentVia = useSentStore((s) => s.via);
   const [marking, setMarking] = useState(false);
+  // Re-render each minute so the late-send flag appears on time.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   // Save progress & build: a local backup plus the slot's snapshot. It never
   // marks the message as sent; that is its own button.
@@ -46,7 +53,9 @@ export default function Composer() {
   // messages that are not on the cadence (safety, incident).
   const pin = pinForMessage(activeTab, tac.slot);
   const pinName = pin ? `${SLOT_LABEL[pin.slot]} ${activeTab === "sos" ? "SoS" : "tactical"}` : "";
-  const sentAt = pin ? sent[slotKey(pin.snapshotDate, pin.slot)] : undefined;
+  const sentKey = pin ? slotKey(pin.snapshotDate, pin.slot) : "";
+  const sentAt = pin ? sent[sentKey] : undefined;
+  const late = pin ? sendOverdue(pin, Boolean(sentAt), now) : false;
 
   async function markSent() {
     const p = pinForMessage(activeTab, tac.slot);
@@ -56,15 +65,36 @@ export default function Composer() {
     if (msg.trim() === "") return;
     setMarking(true);
     try {
-      const at = await useSentStore.getState().markSent(p, () =>
-        writeMessageSent(p, activeTab, msg, { meta, sos, str_am, str_pm, tac, safety_msg }),
-      );
+      const at = await recordSent(p, msg, "manual");
       showToast(`${name} marked as sent at ${hhmm(at)}`);
     } catch (e) {
       showToast(`Not marked as sent: ${e instanceof Error ? e.message : "could not save"}`);
     } finally {
       setMarking(false);
     }
+  }
+
+  function recordSent(p: NonNullable<typeof pin>, msg: string, via: SentVia) {
+    return useSentStore.getState().markSent(p, via, () =>
+      writeMessageSent(p, activeTab, msg, { meta, sos, str_am, str_pm, tac, safety_msg }, via),
+    );
+  }
+
+  // Copying is the one step every send goes through, so a copy in the send
+  // window logs the message as sent. A later copy keeps the first sent time
+  // and refreshes the stored content.
+  async function logCopy(msg: string) {
+    const p = pinForMessage(activeTab, tac.slot);
+    if (!p || msg.trim() === "" || !copyLogsSent(p)) return false;
+    const name = `${SLOT_LABEL[p.slot]} ${activeTab === "sos" ? "SoS" : "tactical"}`;
+    const already = useSentStore.getState().sent[slotKey(p.snapshotDate, p.slot)];
+    try {
+      const at = await recordSent(p, msg, "copy");
+      showToast(already ? "Copied" : `Copied · ${name} logged as sent at ${hhmm(at)}. Undo if it was not sent.`);
+    } catch (e) {
+      showToast(`Copied, but not logged as sent: ${e instanceof Error ? e.message : "could not save"}`);
+    }
+    return true;
   }
 
   async function unmarkSent() {
@@ -94,7 +124,6 @@ export default function Composer() {
       } else {
         await navigator.clipboard.writeText(text);
       }
-      showToast("Copied");
     } catch {
       // Last-ditch fallback
       const ta = document.createElement("textarea");
@@ -103,8 +132,8 @@ export default function Composer() {
       ta.select();
       document.execCommand("copy");
       ta.remove();
-      showToast("Copied");
     }
+    if (!(await logCopy(text))) showToast("Copied");
   }
 
   // Keyboard shortcut: Ctrl+Enter
@@ -172,14 +201,20 @@ export default function Composer() {
               <button onClick={build} className="btn btn-primary flex-1" title="Saves progress and builds the message. Does not mark it as sent.">
                 <Wand2 size={15} /> Save progress &amp; build
               </button>
-              <button onClick={copy} disabled={!hasMessage} className="btn" title="Builds, then copies for WhatsApp and Teams">
+              <button onClick={copy} disabled={!hasMessage} className="btn" title="Builds, then copies for WhatsApp and Teams. From 30 minutes before the booked time to an hour after, it also logs the message as sent.">
                 <ClipboardCopy size={15} /> Copy
               </button>
             </div>
+            {late && (
+              <div role="status" className="flex items-start gap-2 rounded-[7px] border px-3 py-2 text-sm" style={{ borderColor: "var(--moderate)", color: "var(--moderate)" }}>
+                <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                <span>{pinName} is past its time and not logged as sent. Copy it to send, or mark it below if it went out another way.</span>
+              </div>
+            )}
             {pin && (sentAt ? (
               <div className="flex items-center gap-2">
                 <span className="inline-flex flex-1 items-center gap-1.5 text-sm" style={{ color: "var(--good)" }}>
-                  <CheckCircle2 size={15} /> {pinName} sent at {hhmm(sentAt)}
+                  <CheckCircle2 size={15} /> {pinName} sent at {hhmm(sentAt)}{sentVia[sentKey] === "copy" ? " · logged on copy" : ""}
                 </span>
                 <button onClick={unmarkSent} disabled={marking} className="btn btn-ghost btn-sm" title="Clear the sent mark if it was made in error">
                   <Undo2 size={14} /> Undo

@@ -11,12 +11,15 @@ the tactical (09:00 / 15:00 / 22:00) and SoS (05:30) WhatsApp messages.
   WON Splitter) through `eng_critical_items`. `src/lib/engineering/criticalMessage.ts`
   is a verbatim copy of the Hub's `src/lib/critical/criticalMessage.ts` and must stay
   byte-identical; change both or neither.
-- "Save progress & build" saves and builds; it never marks a message as sent. "Mark …
-  as sent" records `sent_at` on `ma_message_snapshots`, and the hub cockpit counts only
-  that. Each build or mark is logged against the message's own slot
-  (`src/lib/snapshots/messageSlot.ts`), never the next clock slot.
-- The tactical slot on auto stays on the current message until it is marked as sent,
-  moved on by hand, or an hour past its booked time; a manual pick overrides and the
+- "Save progress & build" saves and builds; it never marks a message as sent. Copying a
+  scheduled message from 30 minutes before its booked time to an hour after logs it as sent
+  (`sent_via = 'copy'`); "Mark … as sent" covers one that went out another way (`'manual'`).
+  Both record `sent_at` on `ma_message_snapshots`, the first mark wins, and the hub cockpit
+  counts only `sent_at`. Each build or mark is logged against the message's own slot
+  (`src/lib/snapshots/messageSlot.ts`), never the next clock slot. A message not logged
+  15 minutes after its time is flagged in the composer.
+- The tactical slot on auto stays on the current message until it is marked as sent (15 minutes
+  more if logged on copy), moved on by hand, or an hour past its booked time; a manual pick overrides and the
   "Auto" button re-engages. A customised intro is never overwritten; auto text only replaces
   a blank field or the last auto-filled text.
 - Mounted on the Derby Control hub (PotatOS) at `overseer.derbycontrol.co.uk/messaging`, which

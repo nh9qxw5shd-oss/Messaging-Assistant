@@ -1,6 +1,6 @@
 import { supabase } from "../supabase";
 import { parseSnapshotMetrics } from "./slots";
-import type { MessagePin } from "./messageSlot";
+import type { MessagePin, SentVia } from "./messageSlot";
 import type { AppStore } from "../store";
 import type { TabKey, TargetMetric } from "../types";
 
@@ -60,17 +60,20 @@ export function captureMessageSnapshot(
 
 /**
  * Mark a message as sent: store it as the slot's snapshot of record and stamp
- * sent_at. Resolves to the sent time; throws if it could not be saved, so the
- * desk is told rather than left thinking it was logged.
+ * sent_at, recording whether it was logged on copy or by hand. Resolves to the
+ * sent time; throws if it could not be saved, so the desk is told rather than
+ * left thinking it was logged.
  */
 export async function writeMessageSent(
   pin: MessagePin,
   tab: TabKey,
   message: string,
   session: SessionSlice,
+  via: SentVia = "manual",
 ): Promise<string> {
   if (!supabase) throw new Error("Database not connected, so the sent mark was not saved");
-  const { data, error } = await supabase.rpc("ma_mark_message_sent", snapshotParams(pin, tab, message, session));
+  const fn = via === "copy" ? "ma_mark_message_sent_on_copy" : "ma_mark_message_sent";
+  const { data, error } = await supabase.rpc(fn, snapshotParams(pin, tab, message, session));
   if (error) throw new Error(error.message);
   return typeof data === "string" ? data : new Date().toISOString();
 }

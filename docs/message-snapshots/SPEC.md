@@ -1,10 +1,11 @@
 # Message Snapshots — Brief
 
 Every **Save progress & build** press captures a snapshot of the built
-message into Supabase, logged against **the message's own slot**. A separate
-**Mark … as sent** press records that the message went out (`sent_at`); the
-Derby Control hub cockpit counts a cadence message as issued only from that
-mark. Snapshots give Insight a reliable, queryable record of what was reported
+message into Supabase, logged against **the message's own slot**. **Copying**
+the message in its send window records that it went out (`sent_at`); a
+separate **Mark … as sent** press does the same for a message sent another
+way. The Derby Control hub cockpit counts a cadence message as issued only
+from that mark. Snapshots give Insight a reliable, queryable record of what was reported
 and what the metric standing was at each reporting point of the day.
 
 ## Slots
@@ -32,7 +33,8 @@ apply in GMT and BST):
 
 ### Tactical slot on auto
 
-Auto stays on the current message until it is **marked as sent**, **moved on**
+Auto stays on the current message until it is **marked as sent** (15 minutes
+longer when logged on copy, so it can be pasted again or corrected), **moved on**
 by hand (per browser, not logged), or **an hour past its booked time**; after
 22:00 it is tomorrow's 09:00. Sent marks are read every minute, so a mark made
 on one machine moves every open Assistant on.
@@ -46,8 +48,23 @@ on one machine moves every open Assistant on.
 - `ma_unmark_message_sent(p_snapshot_date, p_slot)` clears a mark made in
   error (the Undo beside the sent time).
 - Builds through `ma_capture_message_snapshot` never touch `sent_at`.
+- `ma_mark_message_sent_on_copy(...)` is the same mark made by **Copy**. A
+  copy logs the send only from 30 minutes before the booked time to an hour
+  after (`copyLogsSent`), so a preview copied hours ahead is not counted.
+- `sent_via` records which made the first mark: `copy` or `manual` (null on
+  marks made before migration 004). The composer shows "logged on copy"
+  beside the sent time; Undo clears both.
+- A message still not logged 15 minutes after its booked time is flagged in
+  the composer until two hours after it (`sendOverdue`). The hub cockpit
+  flags it overdue on its own clock.
 
-Created by `supabase/migrations/003_message_sent.sql`.
+There is no way to read what went out on WhatsApp, so copying (the one step
+every send passes through) stands in for it. The trade: a copy that is never
+pasted shows as sent until someone presses Undo, where before a forgotten
+press left a sent message showing as unsent.
+
+Created by `supabase/migrations/003_message_sent.sql` and
+`004_sent_on_copy.sql`.
 
 ## Storage — `ma_message_snapshots`
 
@@ -67,6 +84,7 @@ Created by `supabase/migrations/002_message_snapshots.sql`.
 | `first_built_at`   | `timestamptz` | First capture for this slot.                                             |
 | `last_built_at`    | `timestamptz` | Most recent capture (the content stored).                                |
 | `sent_at`          | `timestamptz` | When the message was marked as sent; null while only built.              |
+| `sent_via`         | `text`        | `copy` or `manual`: how the first sent mark was made.                    |
 
 Unique constraint: `(snapshot_date, slot)`. Index on `metrics_for_date`.
 
@@ -111,6 +129,8 @@ produce duplicate slot rows.
 `Save progress & build` (button or Ctrl+Enter) → `Composer.build()` →
 `captureMessageSnapshot(pinForMessage(...))` (`src/lib/snapshots/capture.ts`).
 
+`Copy` → builds, copies, then (in the send window) `writeMessageSent(..., "copy")`
+→ `ma_mark_message_sent_on_copy`.
 `Mark … as sent` → builds, then `writeMessageSent()` → `ma_mark_message_sent`.
 Unlike capture, a failed mark is reported to the operator, so nobody is left
 thinking a message was logged when it was not.
