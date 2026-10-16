@@ -34,7 +34,7 @@ export const SLOT_LABEL: Record<MessageSlot, string> = {
 const COLUMNS = [
   "id", "route_code", "item_label", "item_no", "pps_ref", "location", "times_text",
   "start_at", "end_at", "description", "lines_affected", "status", "status_at",
-  "update_note", "include_in_messages", "concluded_at",
+  "update_note", "include_in_messages", "keep_in_messages", "concluded_at",
 ].join(", ");
 
 /** Statuses that keep an item in every message until it concludes. */

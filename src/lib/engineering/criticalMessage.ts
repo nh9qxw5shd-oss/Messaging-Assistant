@@ -15,6 +15,12 @@
 // so multi-night works carry through every message until they conclude, and a
 // concluded item is reported exactly once.
 //
+// Handback cut-off: an item is carried up to and including the first message
+// after its planned handback (or after its last status change, if that came
+// later), then dropped even if it was left "ongoing", unless someone keeps it
+// in on the tracker (keep_in_messages). A late outcome for work handed back
+// more than a day earlier is not reported. The weekend running list is exempt.
+//
 // Weekends run as one running list: from the Friday 22:00 message to the
 // Monday 05:30 message every item on the Friday, Saturday and Sunday nights is
 // listed in every message, whatever its status, so the whole weekend picture
@@ -82,6 +88,8 @@ export interface CriticalItemLite {
   status_at: string | null;
   update_note: string | null;
   include_in_messages: boolean;
+  /** Kept in by hand past the handback cut-off. */
+  keep_in_messages?: boolean;
   concluded_at: string | null;
 }
 
@@ -205,6 +213,31 @@ function pendingReason(start: number | null, end: number | null, at: number, pre
   return null;
 }
 
+/** An outcome recorded this long after handback is housekeeping, not news. */
+const LATE_OUTCOME_MS = 24 * HOUR_MS;
+
+/**
+ * Past the handback cut-off: the previous message already went out after the
+ * planned handback and after the last status change. Items without a handback
+ * time never lapse.
+ */
+export function pastHandback(item: CriticalItemLite, w: SlotWindow): boolean {
+  const end = ms(item.end_at);
+  if (end === null) return false;
+  return Math.max(end, ms(item.status_at) ?? 0) <= w.prev.getTime();
+}
+
+/** True when the handback cut-off, not the "in messages" switch, keeps an item out of this message. */
+export function heldBackAfterHandback(item: CriticalItemLite, w: SlotWindow): boolean {
+  if (item.keep_in_messages) return false;
+  const status = isCriticalStatus(item.status) ? item.status : "not_yet_taken";
+  if (STATUS_META[status].concluded) return false;
+  const weekend = weekendForWindow(w);
+  const night = nightDateOf(item);
+  if (weekend && night && weekend.nights.includes(night)) return false;
+  return pastHandback(item, w);
+}
+
 /**
  * Pick the items a slot's engineering section should carry. See the header
  * comment for the rule. `items` may span several weeks; only timing and status
@@ -233,11 +266,18 @@ export function selectItemsForSlot(items: CriticalItemLite[], w: SlotWindow): Se
       continue;
     }
 
+    const kept = item.keep_in_messages === true;
     if (meta.concluded) {
       // Report an outcome once: in the first message after it was recorded. Fall
       // back to the planned end time when the conclusion was never time-stamped.
       const when = concluded ?? end;
-      if (when !== null && when > prev && when <= at + 30 * 60_000) out.push({ item, reason: "concluded" });
+      const late = !kept && end !== null && end < at - LATE_OUTCOME_MS;
+      if (when !== null && when > prev && when <= at + 30 * 60_000 && !late) out.push({ item, reason: "concluded" });
+      continue;
+    }
+    if (pastHandback(item, w)) {
+      // Left open past the cut-off: only a hand-kept item carries on.
+      if (kept) out.push({ item, reason: meta.active ? "active" : "no_update" });
       continue;
     }
     if (meta.active) { out.push({ item, reason: "active" }); continue; }
