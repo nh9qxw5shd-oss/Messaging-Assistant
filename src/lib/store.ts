@@ -173,6 +173,8 @@ export interface AppStore {
   applyLivePerfSetting: (raw: string | null) => void;
   persist:      () => void;
   backupNow:    (reason?: string) => void;
+  /** Back up the session with one section replaced (a version about to be lost in a merge). */
+  backupSection:(section: keyof SessionState, value: unknown, reason: string) => void;
   getBackups:   () => BackupEntry[];
   restoreBackup:(index: number) => void;
   exportConfig: () => void;
@@ -499,6 +501,17 @@ export const useStore = create<AppStore>((set, get) => {
         meta: s.meta, sos: s.sos, str_am: s.str_am,
         str_pm: s.str_pm, tac: s.tac, safety_msg: s.safety_msg,
       };
+      const list = loadBackups();
+      list.push({ ts: Date.now(), reason, data: snap });
+      saveBackups(pruneBackups(list));
+    },
+    backupSection: (section, value, reason) => {
+      const s = get();
+      const snap = {
+        meta: s.meta, sos: s.sos, str_am: s.str_am,
+        str_pm: s.str_pm, tac: s.tac, safety_msg: s.safety_msg,
+        [section]: value,
+      } as SessionState;
       const list = loadBackups();
       list.push({ ts: Date.now(), reason, data: snap });
       saveBackups(pruneBackups(list));

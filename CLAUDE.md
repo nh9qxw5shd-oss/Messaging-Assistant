@@ -29,9 +29,16 @@ the tactical (09:00 / 15:00 / 22:00) and SoS (05:30) WhatsApp messages.
   absolute Teams banner URLs go through `src/lib/basePath.ts`.
 - The address carries the open tab (`?tab=<key>`, kept in step by `src/app/page.tsx`): the hub reads it
   to highlight the section, and a link with `?tab=` opens that tab.
-- Saved state follows the latest save in every open copy (standalone tab, hub frame, other tabs):
-  `src/lib/liveStorage.ts` takes in storage changes made elsewhere (session, incidents, moved-on,
-  live-performance switch) without writing them back. New persisted keys need a line there.
+- The draft is shared live across machines: each section (meta, sos, str_am, str_pm, tac,
+  safety_msg, incidents) is a row in `ma_live_state`, written only through `ma_live_put` with the
+  revision it was based on (`src/lib/live/`). A stale write gets the current row back and the copy
+  merges field by field (`merge.ts`, `plan.ts`, both tested) before writing again; sections never
+  affect each other. Browser storage stays the offline copy. A new synced section needs its name
+  in `SECTIONS` and in the table's check constraint.
+- Within one browser, saved state also follows the latest save in every open copy (standalone tab,
+  hub frame, other tabs): `src/lib/liveStorage.ts` takes in storage changes made elsewhere
+  (session, incidents, moved-on, live-performance switch) without writing them back. New
+  persisted keys need a line there.
 - `public/storage-bridge.html` lets the hub (PotatOS) share this system's browser storage with
   the standalone site when it is framed on overseer.derbycontrol.co.uk. It is byte-identical in
   every system that keeps browser storage; change all or none. Keep storage keys prefixed.

@@ -40,6 +40,8 @@ export interface IncidentStore {
   hydrate: () => void;
   /** Take incidents saved by another open copy (storage event); never writes back. */
   reload: () => void;
+  /** Take the shared incidents from the database (live sync); saved here as the offline copy. */
+  replaceIncidents: (incidents: IncidentState[]) => void;
   createIncident: () => void;
   setActive: (id: string) => void;
   /** Patch the active incident. */
@@ -91,6 +93,16 @@ export const useIncidentStore = create<IncidentStore>((set, get) => {
       const current = get().activeId;
       const keep = [current, activeId].find((id) => id && merged.some((i) => i.id === id));
       set({ incidents: merged, activeId: keep ?? merged[0]?.id ?? null, hydrated: true });
+    },
+
+    replaceIncidents: (incidents) => {
+      const current = get().activeId;
+      set({
+        incidents,
+        activeId: current && incidents.some((i) => i.id === current) ? current : incidents[0]?.id ?? null,
+        hydrated: true,
+      });
+      persist();
     },
 
     createIncident: () => {

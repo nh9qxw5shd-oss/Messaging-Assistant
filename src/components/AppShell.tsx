@@ -4,8 +4,9 @@
 // autosave status, the London clock and the theme toggle. The Messaging
 // Assistant stays on one URL, so nav items switch the active tab in the store.
 import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Database, Menu, Moon, PanelLeftClose, PanelLeftOpen, Save, Search, Sun, X } from "lucide-react";
+import { Cloud, CloudOff, Database, Menu, Moon, PanelLeftClose, PanelLeftOpen, Save, Search, Sun, X } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { useLiveStatus } from "@/lib/live/sync";
 import { useLocalStorage, useMounted, useNow } from "@/lib/hooks";
 import { NAV } from "@/lib/nav";
 import { openPalette } from "@/lib/uiEvents";
@@ -130,6 +131,29 @@ function StoreChip() {
   );
 }
 
+/** Whether this copy is on the shared draft: live, saving, offline (saved here) or this device only. */
+function LiveChip() {
+  const status = useLiveStatus((s) => s.status);
+  const view = {
+    live:       { color: "var(--good)",       label: "Live",                  title: "Shared draft: every copy on every machine shows the same content" },
+    saving:     { color: "var(--accent)",     label: "Saving",                title: "Sending changes to the shared draft" },
+    connecting: { color: "var(--text-faint)", label: "Connecting",            title: "Reading the shared draft" },
+    offline:    { color: "var(--moderate)",   label: "Offline · saved here",  title: "Cannot reach the database. Changes are saved in this browser and sent when it is back." },
+    local:      { color: "var(--text-faint)", label: "This device only",      title: "Database not configured: the draft is kept in this browser only" },
+  }[status];
+  const Icon = status === "offline" || status === "local" ? CloudOff : Cloud;
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-semibold"
+      style={{ color: view.color, borderColor: `color-mix(in srgb, ${view.color} 45%, transparent)` }}
+      title={view.title}
+      role="status"
+    >
+      <Icon size={12} /> <span className={status === "offline" ? "" : "hidden sm:inline"}>{view.label}</span>
+    </span>
+  );
+}
+
 /** Time of the newest local backup (autosave every 5 min, on build and on close). */
 function AutosaveChip() {
   const getBackups = useStore((s) => s.getBackups);
@@ -189,6 +213,7 @@ function TopBar({ onMenu }: { onMenu: () => void }) {
       </button>
       <button className="btn btn-ghost btn-icon sm:hidden" onClick={() => openPalette()} aria-label="Command palette"><Search size={18} /></button>
       <div className="flex-1" />
+      <LiveChip />
       <StoreChip />
       <AutosaveChip />
       <Clock />

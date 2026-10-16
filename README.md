@@ -182,10 +182,26 @@ Items are listed as one list in **time order** (start time, then item number) an
 
 | Layer | What | Where |
 |---|---|---|
-| Session state | All form inputs (SoS, Strategic, Tactical, Safety) | `localStorage` (key: `ma-session-v5`) |
+| Session state | All form inputs (SoS, Strategic, Tactical, Safety) and incidents | Shared live draft in Supabase (`ma_live_state`, one row per section), with `localStorage` as the offline copy (`ma-session-v6`, `ma-incidents-v1`) |
 | Config — targets | Target periods and per-period metrics | Supabase (`ma_target_periods`, `ma_targets`) |
 | Config — templates | Seasonal slot pre-written content | Supabase (`ma_seasonal_templates`) |
-| Backups | Rolling 36-snapshot ring buffer @ 5-min | `localStorage` (key: `ma-backups-v5`) |
+| Backups | Rolling 36-snapshot ring buffer @ 5-min, plus any version replaced in a sync merge | `localStorage` (key: `ma-backups-v6`) |
+
+### Live shared draft
+
+Every open copy, on any machine, shows the same draft (`src/lib/live/`). Each section (route
+meta, SoS, strategic AM, strategic PM, tactical, safety, incidents) is its own row in
+`ma_live_state` with its own revision, so the RCM on the SoS or tactical and the SNDM on
+incidents never touch each other's work. A change is written about a second after typing
+stops through `ma_live_put`, which refuses a write based on an out-of-date revision and hands
+back the current one; the copy then merges field by field (incidents by incident, then field)
+and writes again. If both changed the same field, the copy being typed in keeps its value and
+the other is saved to the local backups. Copies read the table every 3 seconds (30 seconds in a
+background tab) and on focus. The topbar shows Live, Saving, or Offline · saved here: offline
+changes stay in `localStorage` and are merged in the same way when the database is back. The
+first time a browser joins, the shared draft wins and what that browser had is kept as a
+backup ("before shared draft"). The open tab, the open incident, theme and the live-performance
+switch stay per browser.
 
 ### Message builders
 

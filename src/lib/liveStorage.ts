@@ -7,7 +7,8 @@
 // saved session once at start and writes the whole session back on every change, so a copy left
 // open would put its old session back over a newer one. Listening for storage changes made by the
 // other copies and taking them in straight away means the most recent save wins everywhere.
-// Taking a change in never writes it back.
+// Taking a change in never writes it back. Copies on other machines are kept in step by the
+// shared draft (live/sync.ts); its bookkeeping key (LS_LIVE_KEY) is per copy and not taken in.
 
 import { useEffect } from "react";
 import { LS_LIVEPERF_KEY, LS_SESSION_KEY } from "./constants";

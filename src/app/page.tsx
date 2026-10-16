@@ -26,6 +26,7 @@ import SafetyTab       from "@/components/tabs/SafetyTab";
 import IncidentTab     from "@/components/tabs/IncidentTab";
 import TargetsTab      from "@/components/tabs/TargetsTab";
 import { useLiveStorage } from "@/lib/liveStorage";
+import { useLiveSync } from "@/lib/live/sync";
 
 const TAB_PANELS: Record<TabKey, React.ReactNode> = {
   sos:          <SoSTab />,
@@ -58,6 +59,9 @@ export default function Page() {
 
   // ─── Take in saves made by other open copies (hub frame, other tabs) ─────
   useLiveStorage();
+
+  // ─── Shared draft: the same content in every copy on every machine ───────
+  useLiveSync();
 
   // ─── Deep link: ?tab=<key> (the hub's links and cadence) wins over the saved tab
   const urlTab = useRef<string | null>(null);
