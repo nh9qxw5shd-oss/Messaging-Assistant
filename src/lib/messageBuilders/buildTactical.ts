@@ -16,7 +16,7 @@ export function buildTactical(_meta: MetaState, tac: TacticalState): string {
   lines.push("https://dashboard.derbycontrol.co.uk");
   lines.push("");
 
-  lines.push("*Upcoming 08:30 Agenda*");
+  lines.push("*Upcoming Service Delivery Call Agenda*");
   lines.push("https://route-call.derbycontrol.co.uk");
   lines.push("");
 

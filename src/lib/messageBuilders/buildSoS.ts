@@ -11,7 +11,7 @@ export function buildSoS(_meta: MetaState, sos: SoSState): string {
   lines.push("https://autumnarchive.derbycontrol.co.uk/archive/kpis");
   lines.push("");
 
-  lines.push("*Upcoming 08:30 Agenda*");
+  lines.push("*Upcoming Service Delivery Call Agenda*");
   lines.push("https://route-call.derbycontrol.co.uk");
   lines.push("");
 
