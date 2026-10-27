@@ -1,4 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type {
   TargetPeriod,
   SupabaseTarget,
@@ -13,7 +14,19 @@ import { currentPeriodName } from "./railwayCalendar";
 const url  = process.env.NEXT_PUBLIC_SUPABASE_URL  ?? "";
 const key  = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-export const supabase = url && key ? createClient(url, key) : null;
+// Since stage 3 of Overseer sign-in (PotatOS doc 10 §7) the tables answer only a signed-in Overseer
+// person with the system switched on. In the browser the client reads Overseer's session cookie
+// (same site, sb-<project>-auth-token), so the person's sign-in carries in; on the server it is
+// anonymous (nothing reads data there).
+function makeClient(): SupabaseClient | null {
+  if (!url || !key) return null;
+  if (typeof window !== "undefined") {
+    return createBrowserClient(url, key, { cookieOptions: { path: "/", sameSite: "lax", secure: location.protocol === "https:" } });
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+export const supabase = makeClient();
 
 function client() {
   if (!supabase) throw new Error("Supabase not configured — check .env.local");
