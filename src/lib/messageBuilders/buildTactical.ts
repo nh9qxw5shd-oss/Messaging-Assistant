@@ -12,10 +12,6 @@ export function buildTactical(_meta: MetaState, tac: TacticalState): string {
   lines.push(`RCM: ${tac.rcm || ""}`);
   lines.push("");
 
-  lines.push("*Upcoming Service Delivery Call Agenda*");
-  lines.push("https://overseer.derbycontrol.co.uk/call/view");
-  lines.push("");
-
   lines.push("*Operational Status*");
   lines.push(tac.status || "");
   lines.push("");

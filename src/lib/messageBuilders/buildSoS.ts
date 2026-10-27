@@ -7,14 +7,6 @@ export function buildSoS(_meta: MetaState, sos: SoSState): string {
   lines.push(sos.intro || "");
   lines.push("");
 
-  lines.push("*EM Autumn Data*");
-  lines.push("https://overseer.derbycontrol.co.uk/autumn/archive/kpis");
-  lines.push("");
-
-  lines.push("*Upcoming Service Delivery Call Agenda*");
-  lines.push("https://overseer.derbycontrol.co.uk/call/view");
-  lines.push("");
-
   lines.push("*Operational Status*");
   lines.push("");
   lines.push(sos.status || "");
