@@ -1,5 +1,5 @@
 import type { IncidentState } from "./types";
-import { absoluteAsset } from "../basePath";
+import { APP_ORIGIN, absoluteAsset } from "../basePath";
 import {
   STRATEGIC_PRIORITY_GROUPS,
   normaliseTime,
@@ -200,7 +200,7 @@ export function renderIncident(inc: IncidentState): string {
  * with the incident's resolved banner as an absolute-URL image.
  */
 export function buildIncidentHtml(inc: IncidentState, plainText: string): string {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const appUrl = APP_ORIGIN;
   const banner = resolveBanner(inc);
   const bannerSrc = banner ? absoluteAsset(appUrl, banner.path) : "";
   const bannerHtml =

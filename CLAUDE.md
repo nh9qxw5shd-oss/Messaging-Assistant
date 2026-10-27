@@ -42,6 +42,10 @@ the tactical (09:00 / 15:00 / 22:00) and SoS (05:30) WhatsApp messages.
 - `public/storage-bridge.html` lets the hub (PotatOS) share this system's browser storage with
   the standalone site when it is framed on overseer.derbycontrol.co.uk. It is byte-identical in
   every system that keeps browser storage; change all or none. Keep storage keys prefixed.
+- Overseer is the only way in (27 Oct): the Vercel project has no domain and is reached only through
+  `overseer.derbycontrol.co.uk/messaging` (PotatOS docs/09 §4.6). The last redirect in `next.config` sends a page
+  load without Overseer's `x-overseer-hop` marker to the same address on Overseer. Absolute links
+  this system hands out use `https://overseer.derbycontrol.co.uk/messaging/…`. Do not add a domain.
 
 ## Design language: Autumn Hub (default for every rebuild and new system)
 

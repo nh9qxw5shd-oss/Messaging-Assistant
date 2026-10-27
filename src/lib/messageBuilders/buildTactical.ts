@@ -13,11 +13,11 @@ export function buildTactical(_meta: MetaState, tac: TacticalState): string {
   lines.push("");
 
   lines.push("*Route Resource Dashboard*");
-  lines.push("https://dashboard.derbycontrol.co.uk");
+  lines.push("https://overseer.derbycontrol.co.uk/duty/resources");
   lines.push("");
 
   lines.push("*Upcoming Service Delivery Call Agenda*");
-  lines.push("https://route-call.derbycontrol.co.uk");
+  lines.push("https://overseer.derbycontrol.co.uk/call/view");
   lines.push("");
 
   lines.push("*Operational Status*");

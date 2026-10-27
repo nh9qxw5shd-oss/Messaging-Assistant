@@ -4,6 +4,9 @@
 
 export const BASE_PATH: string = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
+/** The only public address of this app: Derby Control's Overseer. Absolute links (Teams banners) use it. */
+export const APP_ORIGIN = "https://overseer.derbycontrol.co.uk";
+
 /** Root-relative path ("/api/x") → served path ("/messaging/api/x"). Anything else is returned as is. */
 export function withBase(path: string, base: string = BASE_PATH): string {
   return path.startsWith("/") && !path.startsWith("//") ? `${base}${path}` : path;

@@ -1,5 +1,5 @@
 import type { TabKey } from "../types";
-import { absoluteAsset } from "../basePath";
+import { APP_ORIGIN, absoluteAsset } from "../basePath";
 import type { AppStore } from "../store";
 import { buildSoS } from "./buildSoS";
 import { buildStrategicAM } from "./buildStrategicAM";
@@ -31,7 +31,7 @@ export function buildTeamsHtml(
   plainText: string,
   activeTab: TabKey
 ): string {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const appUrl = APP_ORIGIN;
   const bannerMap: Partial<Record<TabKey, string>> = {
     sos:          "/banners/sos.png",
     strategic_am: "/banners/strategic.png",
